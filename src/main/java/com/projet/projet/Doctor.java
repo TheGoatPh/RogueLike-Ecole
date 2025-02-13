@@ -1,35 +1,48 @@
 package com.projet.projet;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class Doctor extends Player {
-    private int medkits;
-    private final int HEAL_AMOUNT = 50;
-
+    private int healingPower;
+    
     public Doctor() {
-        super(100, 10, 3.0); // Vie moyenne, faibles dégâts, vitesse moyenne
-        this.medkits = 3;
+        super(120, 10, 3.0); // vie = 120, dégâts = 10, vitesse = 3
+        this.healingPower = 100;
         try {
-            String imagePath = "/com/projet/projet/images/doctor.png";
-            sprite.setImage(new Image(getClass().getResourceAsStream(imagePath)));
+            // Chargement des deux sprites
+            String leftImagePath = "/com/projet/projet/images/doctor_left.png";
+            String rightImagePath = "/com/projet/projet/images/doctor_right.png";
+            
+            this.leftSprite = new Image(getClass().getResourceAsStream(leftImagePath));
+            this.rightSprite = new Image(getClass().getResourceAsStream(rightImagePath));
+            
+            // Par défaut, on commence tourné vers la droite
+            sprite.setImage(rightSprite);
         } catch (Exception e) {
-            System.err.println("Impossible de charger l'image du doctor: " + e.getMessage());
+            System.err.println("Impossible de charger les images du doctor: " + e.getMessage());
         }
     }
     
     @Override
     public void attack() {
-        System.out.println("Le docteur attaque avec sa seringue !");
+        if (healingPower >= 10) {
+            // Attaque de soin
+            healingPower -= 10;
+            System.out.println("Le docteur lance une attaque de soin !");
+        }
     }
     
     @Override
     public void useSpecialAbility() {
-        if (medkits > 0) {
-            health += HEAL_AMOUNT;
-            medkits--;
-            System.out.println("Le docteur utilise un medkit ! Santé : " + health);
-        } else {
-            System.out.println("Plus de medkits disponibles !");
+        if (healingPower >= 30) {
+            // Zone de soin
+            healingPower -= 30;
+            System.out.println("Le docteur crée une zone de soin !");
         }
+    }
+
+    protected void updateSprite() {
+        // Mise à jour du sprite en fonction de la direction
     }
 } 

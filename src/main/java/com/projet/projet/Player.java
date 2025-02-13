@@ -26,20 +26,20 @@ public abstract class Player {
         this.damage = damage;
         this.speed = speed;
         
-        // Position initiale au centre
-        this.x = 400;
-        this.y = 300;
+        // Position initiale ajustée
+        this.x = 900;    // Même position X
+        this.y = 550;    // Plus haut (était 650)
         
         // Chargement du sprite par défaut
         try {
             String imagePath = "/com/projet/projet/images/default_player.png";
             sprite = new ImageView(new Image(getClass().getResourceAsStream(imagePath)));
-            sprite.setFitWidth(50);  // Définit la largeur du sprite
-            sprite.setFitHeight(50); // Définit la hauteur du sprite
-            sprite.setPreserveRatio(true); // Garde les proportions
+            sprite.setFitWidth(100);
+            sprite.setFitHeight(100);
+            sprite.setPreserveRatio(true);
         } catch (Exception e) {
             System.err.println("Impossible de charger l'image par défaut: " + e.getMessage());
-            sprite = new ImageView(); // Crée un sprite vide si l'image n'est pas trouvée
+            sprite = new ImageView();
         }
     }
     

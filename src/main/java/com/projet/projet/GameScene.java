@@ -8,14 +8,21 @@ import javafx.scene.shape.Rectangle;
 import java.util.HashSet;
 import java.util.Set;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class GameScene {
-    private static final int GAME_WIDTH = 1200;
-    private static final int GAME_HEIGHT = 800;
+    private static final int GAME_WIDTH = 1920;
+    private static final int GAME_HEIGHT = 1080;
     private Pane root;
     private Player player;
     private Set<KeyCode> activeKeys;
     private Scene scene;
+    private Rectangle platform;
+    private boolean isJumping = false;
+    private double verticalVelocity = 0;
+    private static final double GRAVITY = 0.3;
+    private static final double JUMP_FORCE = -15;
     
     public GameScene(Player player) {
         this.player = player;
@@ -24,14 +31,23 @@ public class GameScene {
         
         System.out.println("GameScene créée"); // Debug
         
-        // Crée un fond gris foncé
-        Rectangle background = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
-        root.getChildren().add(background);
+        // Charge l'image de fond
+        try {
+            Image backgroundImage = new Image(getClass().getResourceAsStream("/com/projet/projet/images/background.jpg"));
+            ImageView background = new ImageView(backgroundImage);
+            background.setFitWidth(GAME_WIDTH);
+            background.setFitHeight(GAME_HEIGHT);
+            root.getChildren().add(background);
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement du fond: " + e.getMessage());
+            Rectangle fallbackBackground = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
+            root.getChildren().add(fallbackBackground);
+        }
         
-        // Ajoute une plateforme de test
-        Rectangle platform = new Rectangle(200, 50, Color.BROWN);
-        platform.setX(500);
-        platform.setY(400);
+        // Création de la plateforme principale plus large et invisible
+        platform = new Rectangle(1300, 40, Color.TRANSPARENT);
+        platform.setX(300);
+        platform.setY(660);
         root.getChildren().add(platform);
         
         // Ajoute le sprite du joueur à la scène
@@ -47,6 +63,7 @@ public class GameScene {
         
         // Configure les contrôles sur la Scene au lieu du Pane
         setupControls();
+        startGameLoop();
     }
     
     private void setupControls() {
@@ -55,13 +72,9 @@ public class GameScene {
         // Ajoute les gestionnaires d'événements à la Scene
         scene.setOnKeyPressed(e -> {
             System.out.println("Touche pressée: " + e.getCode()); // Debug
-            if (e.getCode() == KeyCode.LEFT || 
-                e.getCode() == KeyCode.RIGHT || 
-                e.getCode() == KeyCode.UP || 
-                e.getCode() == KeyCode.DOWN) {
-                activeKeys.add(e.getCode());
-                System.out.println("Touche ajoutée aux touches actives: " + e.getCode()); // Debug
-                System.out.println("Touches actives: " + activeKeys); // Debug
+            activeKeys.add(e.getCode());
+            if (e.getCode() == KeyCode.UP && !isJumping) {  // Changé de SPACE à UP
+                jump();
             }
         });
         
@@ -69,23 +82,26 @@ public class GameScene {
             System.out.println("Touche relâchée: " + e.getCode()); // Debug
             activeKeys.remove(e.getCode());
         });
-        
-        // Démarre la boucle de jeu
-        startGameLoop();
     }
     
     private void startGameLoop() {
         System.out.println("Démarrage de la boucle de jeu"); // Debug
-        new AnimationTimer() {
+        AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                updateGame();
+                update();
             }
-        }.start();
+        };
+        gameLoop.start();
     }
     
-    private void updateGame() {
-        // Gestion des déplacements avec les flèches uniquement
+    private void update() {
+        handleMovement();
+        applyGravity();
+        checkCollision();
+    }
+    
+    private void handleMovement() {
         if (activeKeys.contains(KeyCode.LEFT)) {
             player.moveLeft();
             System.out.println("Déplacement gauche - X: " + player.x); // Debug
@@ -94,28 +110,37 @@ public class GameScene {
             player.moveRight();
             System.out.println("Déplacement droite - X: " + player.x); // Debug
         }
-        if (activeKeys.contains(KeyCode.UP)) {
-            player.moveUp();
-            System.out.println("Déplacement haut - Y: " + player.y); // Debug
+    }
+    
+    private void jump() {
+        if (!isJumping) {
+            verticalVelocity = JUMP_FORCE;
+            isJumping = true;
         }
-        if (activeKeys.contains(KeyCode.DOWN)) {
-            player.moveDown();
-            System.out.println("Déplacement bas - Y: " + player.y); // Debug
-        }
-        
-        // Limites de la zone de jeu
-        double oldX = player.x;
-        double oldY = player.y;
-        player.x = Math.max(0, Math.min(player.x, GAME_WIDTH - 50));
-        player.y = Math.max(0, Math.min(player.y, GAME_HEIGHT - 50));
-        
-        if (oldX != player.x || oldY != player.y) {
-            System.out.println("Position ajustée - X: " + player.x + ", Y: " + player.y); // Debug
-        }
-        
-        // Met à jour la position du sprite
-        player.sprite.setX(player.x);
+    }
+    
+    private void applyGravity() {
+        verticalVelocity += GRAVITY;
+        player.y += verticalVelocity;
         player.sprite.setY(player.y);
+    }
+    
+    private void checkCollision() {
+        // Collision avec la plateforme
+        if (player.sprite.getBoundsInParent().intersects(platform.getBoundsInParent())) {
+            if (verticalVelocity > 0) { // Si le joueur tombe
+                player.y = platform.getY() - player.sprite.getFitHeight();
+                player.sprite.setY(player.y);
+                verticalVelocity = 0;
+                isJumping = false;
+            }
+        }
+        
+        // Empêcher le joueur de sortir de l'écran
+        if (player.x < 0) player.x = 0;
+        if (player.x > GAME_WIDTH - player.sprite.getFitWidth()) 
+            player.x = GAME_WIDTH - player.sprite.getFitWidth();
+        player.sprite.setX(player.x);
     }
     
     public Scene getScene() {
