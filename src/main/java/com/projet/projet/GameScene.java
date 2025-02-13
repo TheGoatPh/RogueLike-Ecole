@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import java.util.HashSet;
 import java.util.Set;
+import javafx.scene.Scene;
 
 public class GameScene {
     private static final int GAME_WIDTH = 1200;
@@ -14,6 +15,7 @@ public class GameScene {
     private Pane root;
     private Player player;
     private Set<KeyCode> activeKeys;
+    private Scene scene;
     
     public GameScene(Player player) {
         this.player = player;
@@ -26,6 +28,12 @@ public class GameScene {
         Rectangle background = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
         root.getChildren().add(background);
         
+        // Ajoute une plateforme de test
+        Rectangle platform = new Rectangle(200, 50, Color.BROWN);
+        platform.setX(500);
+        platform.setY(400);
+        root.getChildren().add(platform);
+        
         // Ajoute le sprite du joueur à la scène
         root.getChildren().add(player.sprite);
         
@@ -34,17 +42,18 @@ public class GameScene {
         player.sprite.setY(player.y);
         System.out.println("Position initiale - X: " + player.x + ", Y: " + player.y); // Debug
         
-        // Configure les contrôles
+        // Crée la Scene
+        scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
+        
+        // Configure les contrôles sur la Scene au lieu du Pane
         setupControls();
     }
     
     private void setupControls() {
         System.out.println("Configuration des contrôles..."); // Debug
         
-        root.setFocusTraversable(true);
-        
-        // Capture uniquement les flèches directionnelles
-        root.setOnKeyPressed(e -> {
+        // Ajoute les gestionnaires d'événements à la Scene
+        scene.setOnKeyPressed(e -> {
             System.out.println("Touche pressée: " + e.getCode()); // Debug
             if (e.getCode() == KeyCode.LEFT || 
                 e.getCode() == KeyCode.RIGHT || 
@@ -56,14 +65,10 @@ public class GameScene {
             }
         });
         
-        root.setOnKeyReleased(e -> {
+        scene.setOnKeyReleased(e -> {
             System.out.println("Touche relâchée: " + e.getCode()); // Debug
             activeKeys.remove(e.getCode());
         });
-        
-        // Demande le focus pour recevoir les événements clavier
-        root.requestFocus();
-        System.out.println("Focus demandé"); // Debug
         
         // Démarre la boucle de jeu
         startGameLoop();
@@ -113,7 +118,7 @@ public class GameScene {
         player.sprite.setY(player.y);
     }
     
-    public Pane getRoot() {
-        return root;
+    public Scene getScene() {
+        return scene;
     }
 } 

@@ -10,10 +10,17 @@ public class Wizard extends Player {
         super(100, 15, 3.0); // vie = 100, dégâts = 15, vitesse = 3
         this.mana = 100;
         try {
-            String imagePath = "/com/projet/projet/images/wizard_left.png";
-            sprite.setImage(new Image(getClass().getResourceAsStream(imagePath)));
+            // Chargement des deux sprites
+            String leftImagePath = "/com/projet/projet/images/wizard_left.png";
+            String rightImagePath = "/com/projet/projet/images/wizard_right.png";
+            
+            this.leftSprite = new Image(getClass().getResourceAsStream(leftImagePath));
+            this.rightSprite = new Image(getClass().getResourceAsStream(rightImagePath));
+            
+            // Par défaut, on commence tourné vers la droite
+            sprite.setImage(rightSprite);
         } catch (Exception e) {
-            System.err.println("Impossible de charger l'image du wizard: " + e.getMessage());
+            System.err.println("Impossible de charger les images du wizard: " + e.getMessage());
         }
     }
     

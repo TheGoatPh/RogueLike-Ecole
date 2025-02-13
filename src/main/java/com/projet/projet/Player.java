@@ -16,6 +16,10 @@ public abstract class Player {
     // Sprite du joueur
     protected ImageView sprite;
     
+    // Ajout des variables pour les sprites directionnels
+    protected Image leftSprite;
+    protected Image rightSprite;
+    
     public Player(int health, int damage, double speed) {
         // Initialisation des statistiques
         this.health = health;
@@ -43,11 +47,13 @@ public abstract class Player {
     public void moveLeft() {
         x -= speed;
         sprite.setX(x);
+        sprite.setImage(leftSprite); // Change le sprite vers la gauche
     }
     
     public void moveRight() {
         x += speed;
         sprite.setX(x);
+        sprite.setImage(rightSprite); // Change le sprite vers la droite
     }
     
     // Nouvelles méthodes de déplacement vertical

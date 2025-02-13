@@ -4,6 +4,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 
 public class GameManager {
     private Player currentPlayer;
@@ -31,7 +32,8 @@ public class GameManager {
     private void startGame(String playerClass) {
         currentPlayer = PlayerFactory.createPlayer(playerClass);
         gameScene = new GameScene(currentPlayer);
-        // Changer la scène actuelle pour la scène de jeu
-        menu.getScene().setRoot(gameScene.getRoot());
+        // Utilise la nouvelle Scene du GameScene
+        Stage stage = (Stage) menu.getScene().getWindow();
+        stage.setScene(gameScene.getScene());
     }
 } 
