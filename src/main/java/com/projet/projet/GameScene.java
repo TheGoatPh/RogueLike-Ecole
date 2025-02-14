@@ -30,7 +30,7 @@ public class GameScene {
     private double verticalVelocity = 0;
     private static final double GRAVITY = 0.2;
     private static final double JUMP_FORCE = -15;
-    private List<Skeleton> skeletons;
+    private List<Demon> demons;
     private Rectangle healthBarBackground;
     private Rectangle healthBarForeground;
     private static final int HEALTH_BAR_WIDTH = 200;
@@ -42,7 +42,7 @@ public class GameScene {
         this.activeKeys = new HashSet<>();
         this.platforms = new ArrayList<>();
         this.traversablePlatforms = new ArrayList<>();
-        this.skeletons = new ArrayList<>();
+        this.demons = new ArrayList<>();
         
         System.out.println("GameScene créée"); // Debug
         
@@ -105,11 +105,11 @@ public class GameScene {
         
         root.getChildren().addAll(healthBarBackground, healthBarForeground);
         
-        // Créer et ajouter le squelette après 3 secondes
+        // Créer et ajouter le demon après 3 secondes
         Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
-            Skeleton skeleton = new Skeleton(player.x + 400, player.y);
-            skeletons.add(skeleton);
-            root.getChildren().add(skeleton.getSprite());
+            Demon demon = new Demon(player.x + 400, player.y);
+            demons.add(demon);
+            root.getChildren().add(demon.getSprite());
         }));
         timeline.play();
         
@@ -154,7 +154,7 @@ public class GameScene {
         handleMovement();
         applyGravity();
         checkCollision();
-        updateSkeletons();
+        updateDemons();
         updateHealthBar();
     }
     
@@ -228,24 +228,24 @@ public class GameScene {
         healthBarForeground.setWidth(HEALTH_BAR_WIDTH * healthPercentage);
     }
     
-    private void handleSkeletonCollision(Skeleton skeleton) {
-        if (skeleton.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
+    private void handleDemonCollision(Demon demon) {
+        if (demon.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
             player.takeDamage(10);
         }
     }
     
-    private void updateSkeletons() {
-        for (Skeleton skeleton : skeletons) {
-            skeleton.moveTowardsPlayer(player);
+    private void updateDemons() {
+        for (Demon demon : demons) {
+            demon.moveTowardsPlayer(player);
             
             for (Rectangle platform : platforms) {
-                skeleton.checkCollision(platform);
+                demon.checkCollision(platform);
             }
             for (Rectangle platform : traversablePlatforms) {
-                skeleton.checkCollision(platform);
+                demon.checkCollision(platform);
             }
             
-            handleSkeletonCollision(skeleton);
+            handleDemonCollision(demon);
         }
     }
     
