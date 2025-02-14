@@ -35,8 +35,8 @@ public class GameScene {
     private List<Rectangle> traversablePlatforms;
     private boolean isJumping = false;
     private double verticalVelocity = 0;
-    private static final double GRAVITY = 0.4;
-    private static final double JUMP_FORCE = -10.0;
+    private static final double GRAVITY = 0.3;
+    private static final double JUMP_FORCE = -15.0;
     private List<Demon> demons;
     private Rectangle healthBarBackground;
     private Rectangle healthBarForeground;
@@ -78,18 +78,18 @@ public class GameScene {
         platform.setY(GAME_HEIGHT * 0.65);
         
         // Plateformes latérales ajustées
-        Rectangle rectangleGauche = new Rectangle(GAME_WIDTH * 0.2, 30, Color.DARKRED);
-        rectangleGauche.setX(GAME_WIDTH * 0.1);
-        rectangleGauche.setY(platform.getY() - 180); // Baissé de 220 à 180
+        Rectangle rectangleGauche = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
+        rectangleGauche.setX(GAME_WIDTH * 0.05);
+        rectangleGauche.setY(platform.getY() - 160);
         
-        Rectangle rectangleDroit = new Rectangle(GAME_WIDTH * 0.2, 30, Color.DARKBLUE);
-        rectangleDroit.setX(GAME_WIDTH * 0.7);
-        rectangleDroit.setY(platform.getY() - 180); // Baissé de 220 à 180
+        Rectangle rectangleDroit = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
+        rectangleDroit.setX(GAME_WIDTH * 0.75);
+        rectangleDroit.setY(platform.getY() - 160);
         
         // Plateforme centrale ajustée
-        Rectangle rectangleCentre = new Rectangle(GAME_WIDTH * 0.2, 30, Color.DARKGREEN);
+        Rectangle rectangleCentre = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
         rectangleCentre.setX(GAME_WIDTH * 0.4);
-        rectangleCentre.setY(platform.getY() - 220); // Baissé de 260 à 220
+        rectangleCentre.setY(platform.getY() - 200);
         
         // Ajout des plateformes traversables
         traversablePlatforms.add(rectangleGauche);
