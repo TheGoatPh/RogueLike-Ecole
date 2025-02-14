@@ -4,7 +4,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 
-public class Demon {
+public class Demon extends Skeleton {
     private double x;
     private double y;
     private ImageView sprite;
@@ -21,6 +21,7 @@ public class Demon {
     private static final int ATTACK_DAMAGE = 5; // Dégâts par attaque
     
     public Demon(double x, double y) {
+        super(x, y);
         this.x = x;
         this.y = y;
         
@@ -30,8 +31,8 @@ public class Demon {
             this.sprite = new ImageView(idleImage);
             this.sprite.setX(x);
             this.sprite.setY(y);
-            this.sprite.setFitWidth(240);  // Augmenté de 160 à 240
-            this.sprite.setFitHeight(240); // Augmenté de 160 à 240
+            this.sprite.setFitWidth(40);  // Réduit de 50 à 40
+            this.sprite.setFitHeight(40); // Réduit de 50 à 40
         } catch (Exception e) {
             System.err.println("Erreur chargement image demon: " + e.getMessage());
         }

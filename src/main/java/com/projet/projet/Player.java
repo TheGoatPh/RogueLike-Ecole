@@ -21,8 +21,8 @@ public abstract class Player {
         this.currentHealth = health;
         
         sprite = new ImageView();
-        sprite.setFitWidth(80);
-        sprite.setFitHeight(80);
+        sprite.setFitWidth(50);
+        sprite.setFitHeight(50);
         sprite.setPreserveRatio(true);
     }
     

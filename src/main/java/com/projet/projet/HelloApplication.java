@@ -7,9 +7,9 @@ import javafx.stage.Stage;
 import javafx.geometry.Rectangle2D;
 
 public class HelloApplication extends Application {
-    // Augmentation de la taille de la fenêtre
-    private static final int WINDOW_WIDTH = 1920;
-    private static final int WINDOW_HEIGHT = 1080;
+    // Taille unique pour tous les écrans
+    public static final int WINDOW_WIDTH = 1024;
+    public static final int WINDOW_HEIGHT = 576;
     private GameManager gameManager;
 
     @Override
@@ -19,7 +19,7 @@ public class HelloApplication extends Application {
         
         stage.setTitle("RogueLike Game");
         stage.setScene(scene);
-        stage.setResizable(false); // Empêche le redimensionnement
+        stage.setResizable(false);
         
         // Centre la fenêtre sur l'écran
         Screen screen = Screen.getPrimary();
