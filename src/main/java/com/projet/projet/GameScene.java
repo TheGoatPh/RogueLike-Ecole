@@ -12,6 +12,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import java.util.List;
 import java.util.ArrayList;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
 
 public class GameScene {
     private static final int GAME_WIDTH = 1920;
@@ -27,6 +30,11 @@ public class GameScene {
     private double verticalVelocity = 0;
     private static final double GRAVITY = 0.2;
     private static final double JUMP_FORCE = -15;
+    private List<Skeleton> skeletons;
+    private Rectangle healthBarBackground;
+    private Rectangle healthBarForeground;
+    private static final int HEALTH_BAR_WIDTH = 200;
+    private static final int HEALTH_BAR_HEIGHT = 20;
     
     public GameScene(Player player) {
         this.player = player;
@@ -34,6 +42,7 @@ public class GameScene {
         this.activeKeys = new HashSet<>();
         this.platforms = new ArrayList<>();
         this.traversablePlatforms = new ArrayList<>();
+        this.skeletons = new ArrayList<>();
         
         System.out.println("GameScene créée"); // Debug
         
@@ -87,6 +96,23 @@ public class GameScene {
         player.sprite.setY(player.y);
         System.out.println("Position initiale - X: " + player.x + ", Y: " + player.y); // Debug
         
+        // Création de la barre de vie
+        healthBarBackground = new Rectangle(20, 20, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+        healthBarBackground.setFill(Color.DARKRED);
+        
+        healthBarForeground = new Rectangle(20, 20, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+        healthBarForeground.setFill(Color.GREEN);
+        
+        root.getChildren().addAll(healthBarBackground, healthBarForeground);
+        
+        // Créer et ajouter le squelette après 3 secondes
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
+            Skeleton skeleton = new Skeleton(player.x + 400, player.y);
+            skeletons.add(skeleton);
+            root.getChildren().add(skeleton.getSprite());
+        }));
+        timeline.play();
+        
         // Crée la Scene
         scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
         
@@ -128,6 +154,8 @@ public class GameScene {
         handleMovement();
         applyGravity();
         checkCollision();
+        updateSkeletons();
+        updateHealthBar();
     }
     
     private void handleMovement() {
@@ -193,6 +221,32 @@ public class GameScene {
         if (player.x > GAME_WIDTH - player.sprite.getFitWidth()) 
             player.x = GAME_WIDTH - player.sprite.getFitWidth();
         player.sprite.setX(player.x);
+    }
+    
+    private void updateHealthBar() {
+        double healthPercentage = (double) player.getCurrentHealth() / player.getMaxHealth();
+        healthBarForeground.setWidth(HEALTH_BAR_WIDTH * healthPercentage);
+    }
+    
+    private void handleSkeletonCollision(Skeleton skeleton) {
+        if (skeleton.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
+            player.takeDamage(10);
+        }
+    }
+    
+    private void updateSkeletons() {
+        for (Skeleton skeleton : skeletons) {
+            skeleton.moveTowardsPlayer(player);
+            
+            for (Rectangle platform : platforms) {
+                skeleton.checkCollision(platform);
+            }
+            for (Rectangle platform : traversablePlatforms) {
+                skeleton.checkCollision(platform);
+            }
+            
+            handleSkeletonCollision(skeleton);
+        }
     }
     
     public Scene getScene() {
