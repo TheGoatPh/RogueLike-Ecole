@@ -10,6 +10,8 @@ import java.util.Set;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import java.util.List;
+import java.util.ArrayList;
 
 public class GameScene {
     private static final int GAME_WIDTH = 1920;
@@ -19,15 +21,19 @@ public class GameScene {
     private Set<KeyCode> activeKeys;
     private Scene scene;
     private Rectangle platform;
+    private List<Rectangle> platforms;
+    private List<Rectangle> traversablePlatforms;
     private boolean isJumping = false;
     private double verticalVelocity = 0;
-    private static final double GRAVITY = 0.3;
+    private static final double GRAVITY = 0.2;
     private static final double JUMP_FORCE = -15;
     
     public GameScene(Player player) {
         this.player = player;
         this.root = new Pane();
         this.activeKeys = new HashSet<>();
+        this.platforms = new ArrayList<>();
+        this.traversablePlatforms = new ArrayList<>();
         
         System.out.println("GameScene créée"); // Debug
         
@@ -44,11 +50,34 @@ public class GameScene {
             root.getChildren().add(fallbackBackground);
         }
         
-        // Création de la plateforme principale plus large et invisible
+        // Création des trois plateformes en haut avec positions ajustées
+        Rectangle rectangleGauche = new Rectangle(300, 40, Color.DARKRED);
+        rectangleGauche.setX(150);
+        rectangleGauche.setY(420);
+        
+        Rectangle rectangleCentre = new Rectangle(300, 40, Color.DARKGREEN);
+        rectangleCentre.setX(800);
+        rectangleCentre.setY(360);
+        
+        Rectangle rectangleDroit = new Rectangle(350, 40, Color.DARKBLUE);
+        rectangleDroit.setX(1480);
+        rectangleDroit.setY(420);
+        
+        // Plateforme principale invisible
         platform = new Rectangle(1300, 40, Color.TRANSPARENT);
         platform.setX(300);
         platform.setY(660);
-        root.getChildren().add(platform);
+        
+        // Ajout des plateformes traversables
+        traversablePlatforms.add(rectangleGauche);
+        traversablePlatforms.add(rectangleCentre);
+        traversablePlatforms.add(rectangleDroit);
+        
+        // Ajout de la plateforme principale non-traversable
+        platforms.add(platform);
+        
+        // Ajout de tous les rectangles à la scène
+        root.getChildren().addAll(platform, rectangleGauche, rectangleCentre, rectangleDroit);
         
         // Ajoute le sprite du joueur à la scène
         root.getChildren().add(player.sprite);
@@ -126,14 +155,37 @@ public class GameScene {
     }
     
     private void checkCollision() {
-        // Collision avec la plateforme
+        boolean onPlatform = false;
+        
+        // Vérification pour toutes les plateformes
+        for (Rectangle currentPlatform : traversablePlatforms) {
+            if (player.sprite.getBoundsInParent().intersects(currentPlatform.getBoundsInParent())) {
+                if (verticalVelocity > 0 && // Si le joueur descend
+                    player.y + player.sprite.getFitHeight() - 10 <= currentPlatform.getY() && // Si le joueur est au-dessus
+                    !activeKeys.contains(KeyCode.DOWN)) { // Et qu'il n'appuie pas sur bas
+                    player.y = currentPlatform.getY() - player.sprite.getFitHeight();
+                    player.sprite.setY(player.y);
+                    verticalVelocity = 0;
+                    isJumping = false;
+                    onPlatform = true;
+                    break;
+                }
+            }
+        }
+        
+        // Vérification pour la plateforme principale (non traversable)
         if (player.sprite.getBoundsInParent().intersects(platform.getBoundsInParent())) {
-            if (verticalVelocity > 0) { // Si le joueur tombe
+            if (verticalVelocity > 0) { // Si le joueur descend
                 player.y = platform.getY() - player.sprite.getFitHeight();
                 player.sprite.setY(player.y);
                 verticalVelocity = 0;
                 isJumping = false;
+                onPlatform = true;
             }
+        }
+        
+        if (!onPlatform && !isJumping) {
+            isJumping = true;
         }
         
         // Empêcher le joueur de sortir de l'écran
