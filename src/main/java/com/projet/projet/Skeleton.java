@@ -18,15 +18,21 @@ public class Skeleton {
         
         try {
             String imagePath = "/com/projet/projet/images/skeleton.png";
-            Image image = new Image(getClass().getResourceAsStream(imagePath));
+            Image image;
+            try {
+                image = new Image(getClass().getResourceAsStream(imagePath));
+            } catch (Exception e) {
+                // Si l'image du squelette n'est pas trouvée, utiliser l'image par défaut
+                image = new Image(getClass().getResourceAsStream("/com/projet/projet/images/default_player.png"));
+            }
             sprite = new ImageView(image);
             sprite.setFitWidth(SPRITE_SIZE);
             sprite.setFitHeight(SPRITE_SIZE);
             sprite.setX(x);
             sprite.setY(y);
         } catch (Exception e) {
-            System.err.println("Impossible de charger l'image du squelette: " + e.getMessage());
-            // Créer un sprite par défaut si l'image ne charge pas
+            System.err.println("Impossible de charger l'image du squelette ou l'image par défaut: " + e.getMessage());
+            // Créer un sprite par défaut si aucune image ne charge
             sprite = new ImageView();
             sprite.setFitWidth(SPRITE_SIZE);
             sprite.setFitHeight(SPRITE_SIZE);

@@ -5,6 +5,7 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.geometry.Rectangle2D;
+import javafx.stage.WindowEvent;
 
 public class HelloApplication extends Application {
     // Taille unique pour tous les écrans
@@ -14,19 +15,22 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-        gameManager = new GameManager();
-        Scene scene = new Scene(gameManager.getClassSelectionMenu(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        stage.setTitle("RogueLike");
         
-        stage.setTitle("RogueLike Game");
+        // Démarrer avec le menu principal au lieu du menu de sélection des classes
+        MainMenu mainMenu = new MainMenu();
+        Scene scene = new Scene(mainMenu.getMainMenu(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        
+        // Ajouter un gestionnaire pour la fermeture de la fenêtre
+        stage.setOnCloseRequest((WindowEvent event) -> {
+            // Si la scène actuelle est une GameScene, sauvegarder la partie
+            if (stage.getScene() != null && stage.getScene().getRoot() instanceof GameScene) {
+                GameScene gameScene = (GameScene) stage.getScene().getRoot();
+                gameScene.saveGame();
+            }
+        });
+        
         stage.setScene(scene);
-        stage.setResizable(false);
-        
-        // Centre la fenêtre sur l'écran
-        Screen screen = Screen.getPrimary();
-        Rectangle2D bounds = screen.getVisualBounds();
-        stage.setX((bounds.getWidth() - WINDOW_WIDTH) / 2);
-        stage.setY((bounds.getHeight() - WINDOW_HEIGHT) / 2);
-        
         stage.show();
     }
 

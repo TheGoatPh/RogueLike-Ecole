@@ -26,10 +26,9 @@ import javafx.scene.effect.DropShadow;
 import java.util.Random;
 import javafx.scene.shape.Circle;
 
-public class GameScene {
+public class GameScene extends Pane {
     private static final int GAME_WIDTH = HelloApplication.WINDOW_WIDTH;
     private static final int GAME_HEIGHT = HelloApplication.WINDOW_HEIGHT;
-    private Pane root;
     private Player player;
     private Set<KeyCode> activeKeys;
     private Scene scene;
@@ -75,15 +74,29 @@ public class GameScene {
     private boolean isPaused = false;
     
     public GameScene(Player player) {
+        this(player, null);
+    }
+    
+    public GameScene(Player player, SaveData saveData) {
+        super();
         this.player = player;
-        this.root = new Pane();
         this.activeKeys = new HashSet<>();
         this.platforms = new ArrayList<>();
         this.traversablePlatforms = new ArrayList<>();
         this.demons = new ArrayList<>();
-        this.startTime = System.currentTimeMillis();
         this.potions = new ArrayList<>();
-        this.currentWave = 0;
+        
+        if (saveData != null) {
+            this.currentWave = saveData.getCurrentWave() - 1;
+            this.demonKillCount = saveData.getDemonKillCount();
+            this.startTime = System.currentTimeMillis() - (saveData.getPlayTime() * 1000);
+            this.hasPotion1 = saveData.isHasPotion1();
+            this.hasPotion2 = saveData.isHasPotion2();
+            player.currentHealth = saveData.getCurrentHealth();
+        } else {
+            this.currentWave = 0;
+            this.startTime = System.currentTimeMillis();
+        }
         
         System.out.println("GameScene créée"); // Debug
         
@@ -93,11 +106,11 @@ public class GameScene {
             ImageView background = new ImageView(backgroundImage);
             background.setFitWidth(GAME_WIDTH);
             background.setFitHeight(GAME_HEIGHT);
-            root.getChildren().add(background);
+            this.getChildren().add(background);
         } catch (Exception e) {
             System.err.println("Erreur lors du chargement du fond: " + e.getMessage());
             Rectangle fallbackBackground = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
-            root.getChildren().add(fallbackBackground);
+            this.getChildren().add(fallbackBackground);
         }
         
         // Ajustement des plateformes pour la nouvelle taille
@@ -131,10 +144,10 @@ public class GameScene {
         platforms.add(platform);
         
         // Ajout de tous les rectangles à la scène
-        root.getChildren().addAll(platform, rectangleGauche, rectangleCentre, rectangleDroit);
+        this.getChildren().addAll(platform, rectangleGauche, rectangleCentre, rectangleDroit);
         
         // Ajoute le sprite du joueur à la scène
-        root.getChildren().add(player.sprite);
+        this.getChildren().add(player.sprite);
         
         // Position initiale du sprite
         player.sprite.setX(player.x);
@@ -148,7 +161,7 @@ public class GameScene {
         healthBarForeground = new Rectangle(20, 20, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
         healthBarForeground.setFill(Color.GREEN);
         
-        root.getChildren().addAll(healthBarBackground, healthBarForeground);
+        this.getChildren().addAll(healthBarBackground, healthBarForeground);
         
         // Remplacer le compteur de démons par le compteur de vagues
         waveText = new Text("Vague: 1/" + MAX_WAVES);
@@ -169,7 +182,7 @@ public class GameScene {
         waveBigAnnouncement.setX(GAME_WIDTH / 2 - 200);
         waveBigAnnouncement.setY(GAME_HEIGHT / 2);
 
-        root.getChildren().addAll(waveText, waveBigAnnouncement);
+        this.getChildren().addAll(waveText, waveBigAnnouncement);
 
         // Création des slots d'inventaire
         inventorySlot1 = new Rectangle(GAME_WIDTH / 2 - 55, GAME_HEIGHT - 70, 50, 50);
@@ -192,7 +205,7 @@ public class GameScene {
         timerText.setEffect(timerShadow);
         timerText.setX(GAME_WIDTH / 2 - 60);
         timerText.setY(40);
-        root.getChildren().add(timerText);
+        this.getChildren().add(timerText);
         
         // Indicateurs de potions (initialement invisibles)
         potionIndicator1 = new Circle(inventorySlot1.getX() + 25, inventorySlot1.getY() + 25, 10, Color.RED);
@@ -200,12 +213,12 @@ public class GameScene {
         potionIndicator1.setVisible(false);
         potionIndicator2.setVisible(false);
         
-        root.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
+        this.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
         
         // Crée la Scene
-        scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
+        scene = new Scene(this, GAME_WIDTH, GAME_HEIGHT);
         
-        // Configure les contrôles sur la Scene au lieu du Pane
+        // Configure les contrôles
         setupControls();
         startGameLoop();
         
@@ -213,7 +226,7 @@ public class GameScene {
         createGameOverScreen();
         createPauseMenu();
         
-        // Démarrer la première vague à la fin de l'initialisation
+        // Démarrer la première vague
         startNextWave();
     }
     
@@ -480,7 +493,7 @@ public class GameScene {
 
         gameOverScreen.getChildren().addAll(gameOverText, causeText, restartButton, menuButton);
         gameOverScreen.setVisible(false);
-        root.getChildren().add(gameOverScreen);
+        this.getChildren().add(gameOverScreen);
     }
 
     private void restartGame() {
@@ -500,13 +513,13 @@ public class GameScene {
         
         // Créer une nouvelle scène avec le même type de joueur
         Stage stage = (Stage) scene.getWindow();
-        stage.setScene(new GameScene(newPlayer).getScene());
+        stage.setScene(new GameScene(newPlayer, null).getCurrentScene());
     }
     
     private void returnToMenu() {
+        saveGame();
         Stage stage = (Stage) scene.getWindow();
-        GameManager gameManager = new GameManager();
-        stage.setScene(new Scene(gameManager.getClassSelectionMenu(), GAME_WIDTH, GAME_HEIGHT));
+        stage.setScene(new Scene(new MainMenu().getMainMenu(), GAME_WIDTH, GAME_HEIGHT));
     }
     
     private void spawnDemon() {
@@ -514,7 +527,7 @@ public class GameScene {
         double spawnY = platform.getY() - 130;
         Demon demon = new Demon(spawnX, spawnY);
         demons.add(demon);
-        root.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
+        this.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
     }
     
     private void updateTimer() {
@@ -530,7 +543,7 @@ public class GameScene {
         
         Potion potion = new Potion(potionX, potionY);
         potions.add(potion);
-        root.getChildren().add(potion.getSprite());
+        this.getChildren().add(potion.getSprite());
     }
     
     private void usePotion(int slot) {
@@ -550,12 +563,12 @@ public class GameScene {
                 if (!hasPotion1) {
                     hasPotion1 = true;
                     potionIndicator1.setVisible(true);
-                    root.getChildren().remove(potion.getSprite());
+                    this.getChildren().remove(potion.getSprite());
                     potions.remove(potion);
                 } else if (!hasPotion2) {
                     hasPotion2 = true;
                     potionIndicator2.setVisible(true);
-                    root.getChildren().remove(potion.getSprite());
+                    this.getChildren().remove(potion.getSprite());
                     potions.remove(potion);
                 }
             }
@@ -569,7 +582,7 @@ public class GameScene {
                 System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
                 
                 if (demon.isDead()) {
-                    root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
+                    this.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
                     demons.remove(demon);
                     demonKillCount++;
                     
@@ -682,15 +695,39 @@ public class GameScene {
 
         pauseMenu.getChildren().addAll(pauseText, resumeButton, restartButton, menuButton);
         pauseMenu.setVisible(false);
-        root.getChildren().add(pauseMenu);
+        this.getChildren().add(pauseMenu);
     }
 
     private void togglePauseMenu() {
         isPaused = !isPaused;
         pauseMenu.setVisible(isPaused);
+        if (isPaused) {
+            saveGame();
+        }
     }
     
-    public Scene getScene() {
+    public void saveGame() {
+        SaveData saveData = new SaveData(
+            getPlayerClassName(),
+            currentWave,
+            player.getCurrentHealth(),
+            demonKillCount,
+            (System.currentTimeMillis() - startTime) / 1000,
+            hasPotion1,
+            hasPotion2
+        );
+        SaveManager.saveGame(saveData);
+    }
+
+    private String getPlayerClassName() {
+        if (player instanceof Warrior) return "WARRIOR";
+        if (player instanceof Wizard) return "WIZARD";
+        if (player instanceof Assassin) return "ASSASSIN";
+        if (player instanceof Doctor) return "DOCTOR";
+        return "";
+    }
+    
+    public Scene getCurrentScene() {
         return scene;
     }
 } 
