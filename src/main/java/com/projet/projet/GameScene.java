@@ -18,10 +18,12 @@ import javafx.util.Duration;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
+import java.util.Random;
 
 public class GameScene {
     private static final int GAME_WIDTH = HelloApplication.WINDOW_WIDTH;
@@ -45,6 +47,14 @@ public class GameScene {
     private boolean isGameOver = false;
     private VBox gameOverScreen;
     private static final double FALL_DEATH_Y = GAME_HEIGHT + 100; // Point de chute fatale
+    private int demonKillCount = 0;
+    private Text killCountText;
+    private Text timerText;
+    private long startTime;
+    private Timeline spawnTimeline;
+    private Random random = new Random();
+    private long lastDamageTime = 0;
+    private static final long DAMAGE_COOLDOWN = 1000; // 1 second
     
     public GameScene(Player player) {
         this.player = player;
@@ -53,6 +63,7 @@ public class GameScene {
         this.platforms = new ArrayList<>();
         this.traversablePlatforms = new ArrayList<>();
         this.demons = new ArrayList<>();
+        this.startTime = System.currentTimeMillis();
         
         System.out.println("GameScene créée"); // Debug
         
@@ -119,16 +130,34 @@ public class GameScene {
         
         root.getChildren().addAll(healthBarBackground, healthBarForeground);
         
-        // Spawn du démon sur la plateforme principale
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
-            // Spawn le démon sur la plateforme principale
-            double spawnX = platform.getX() + platform.getWidth() - 100; // Un peu avant la fin de la plateforme
-            double spawnY = platform.getY() - 130; // Juste au-dessus de la plateforme
-            Demon demon = new Demon(spawnX, spawnY);
-            demons.add(demon);
-            root.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
+        // Création du compteur de démons tués
+        killCountText = new Text("Démons tués: 0");
+        killCountText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        killCountText.setFill(Color.RED);
+        killCountText.setStroke(Color.BLACK);
+        killCountText.setStrokeWidth(1);
+        killCountText.setX(GAME_WIDTH - 180);
+        killCountText.setY(30);
+
+        // Création du timer
+        timerText = new Text("Temps: 0s");
+        timerText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        timerText.setFill(Color.WHITE);
+        timerText.setStroke(Color.BLACK);
+        timerText.setStrokeWidth(1);
+        timerText.setX(GAME_WIDTH / 2 - 50);
+        timerText.setY(30);
+
+        root.getChildren().addAll(killCountText, timerText);
+
+        // Configuration du respawn aléatoire des démons
+        spawnTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
+            if (!isGameOver && demons.size() < 3) { // Maximum 3 démons à la fois
+                spawnDemon();
+            }
         }));
-        timeline.play();
+        spawnTimeline.setCycleCount(Timeline.INDEFINITE);
+        spawnTimeline.play();
         
         // Création de l'écran de Game Over
         createGameOverScreen();
@@ -151,18 +180,17 @@ public class GameScene {
             if (e.getCode() == KeyCode.UP && !isJumping) {
                 jump();
             }
-            // Gestion de l'attaque avec la touche A
             if (e.getCode() == KeyCode.A && !isGameOver) {
-                // Vérifier si un démon est à portée
                 for (Demon demon : new ArrayList<>(demons)) {
                     if (isInRange(player, demon, 140)) {
                         demon.takeDamage(player.attackDamage);
                         System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
                         
-                        // Vérifier si le démon est mort
                         if (demon.isDead()) {
                             root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
                             demons.remove(demon);
+                            demonKillCount++;
+                            killCountText.setText("Démons tués: " + demonKillCount);
                         }
                     }
                 }
@@ -200,6 +228,7 @@ public class GameScene {
             checkCollision();
             updateDemons();
             updateHealthBar();
+            updateTimer();
             checkGameOver();
         }
     }
@@ -276,7 +305,11 @@ public class GameScene {
     
     private void handleDemonCollision(Demon demon) {
         if (demon.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
-            player.takeDamage(10);
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastDamageTime >= DAMAGE_COOLDOWN) {
+                player.takeDamage(5);
+                lastDamageTime = currentTime;
+            }
         }
     }
     
@@ -403,6 +436,20 @@ public class GameScene {
         Stage stage = (Stage) scene.getWindow();
         GameManager gameManager = new GameManager();
         stage.setScene(new Scene(gameManager.getClassSelectionMenu(), GAME_WIDTH, GAME_HEIGHT));
+    }
+    
+    private void spawnDemon() {
+        double spawnX = platform.getX() + random.nextDouble() * (platform.getWidth() - 100);
+        double spawnY = platform.getY() - 130;
+        Demon demon = new Demon(spawnX, spawnY);
+        demons.add(demon);
+        root.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
+    }
+    
+    private void updateTimer() {
+        long currentTime = System.currentTimeMillis();
+        long elapsedSeconds = (currentTime - startTime) / 1000;
+        timerText.setText(String.format("Temps: %ds", elapsedSeconds));
     }
     
     public Scene getScene() {

@@ -25,6 +25,8 @@ public class Demon extends Skeleton {
     private Rectangle healthBar;
     private static final int HEALTH_BAR_WIDTH = 50;
     private static final int HEALTH_BAR_HEIGHT = 5;
+    private long lastDamageTime = 0;
+    private static final long DAMAGE_COOLDOWN = 1000; // 1 seconde en millisecondes
     
     public Demon(double x, double y) {
         super(x, y);
