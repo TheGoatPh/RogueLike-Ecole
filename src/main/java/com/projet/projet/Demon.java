@@ -3,6 +3,7 @@ package com.projet.projet;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.Color;
 
 public class Demon extends Skeleton {
     private double x;
@@ -17,13 +18,22 @@ public class Demon extends Skeleton {
     private boolean isAttacking = false;
     private long lastAttackTime = 0;
     private static final long ATTACK_COOLDOWN = 2000; // 2 secondes entre chaque attaque
-    private static final double ATTACK_RANGE = 45; // Portée d'attaque
+    private static final double ATTACK_RANGE = 60; // Portée d'attaque
     private static final int ATTACK_DAMAGE = 5; // Dégâts par attaque
+    private int maxHealth = 50;
+    private int currentHealth = 50;
+    private Rectangle healthBar;
+    private static final int HEALTH_BAR_WIDTH = 50;
+    private static final int HEALTH_BAR_HEIGHT = 5;
     
     public Demon(double x, double y) {
         super(x, y);
         this.x = x;
         this.y = y;
+        
+        // Création de la barre de vie
+        healthBar = new Rectangle(x, y - 10, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+        healthBar.setFill(Color.RED);
         
         try {
             this.idleImage = new Image(getClass().getResourceAsStream("/com/projet/projet/images/demon-idle.gif"));
@@ -31,8 +41,8 @@ public class Demon extends Skeleton {
             this.sprite = new ImageView(idleImage);
             this.sprite.setX(x);
             this.sprite.setY(y);
-            this.sprite.setFitWidth(180);  // Réduit de 50 à 40
-            this.sprite.setFitHeight(180); // Réduit de 50 à 40
+            this.sprite.setFitWidth(160);
+            this.sprite.setFitHeight(160);
         } catch (Exception e) {
             System.err.println("Erreur chargement image demon: " + e.getMessage());
         }
@@ -68,6 +78,10 @@ public class Demon extends Skeleton {
         // Mise à jour de la position du sprite
         sprite.setX(x);
         sprite.setY(y);
+        
+        // Mise à jour de la position de la barre de vie
+        healthBar.setX(x + (sprite.getFitWidth() - HEALTH_BAR_WIDTH) / 2);
+        healthBar.setY(y - 10);
     }
     
     private void attack(Player player) {
@@ -117,5 +131,27 @@ public class Demon extends Skeleton {
     
     public double getY() {
         return y;
+    }
+
+    public void takeDamage(int damage) {
+        currentHealth = Math.max(0, currentHealth - damage);
+        updateHealthBar();
+    }
+
+    private void updateHealthBar() {
+        double healthPercentage = (double) currentHealth / maxHealth;
+        healthBar.setWidth(HEALTH_BAR_WIDTH * healthPercentage);
+    }
+
+    public boolean isDead() {
+        return currentHealth <= 0;
+    }
+
+    public Rectangle getHealthBar() {
+        return healthBar;
+    }
+
+    public int getCurrentHealth() {
+        return currentHealth;
     }
 } 

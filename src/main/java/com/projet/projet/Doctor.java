@@ -7,7 +7,8 @@ public class Doctor extends Player {
     private int healingPower;
     
     public Doctor() {
-        super(120, 10, 3.0); // vie = 120, dégâts = 10, vitesse = 3
+        super(120, 20, 3.0); // vie = 120, dégâts = 20, vitesse = 3
+        this.attackCooldown = 1000; // Attaque normale (1 seconde)
         this.healingPower = 100;
         try {
             // Chargement des deux sprites

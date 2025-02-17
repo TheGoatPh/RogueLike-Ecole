@@ -12,6 +12,9 @@ public abstract class Player {
     private double speed;
     protected int maxHealth;
     protected int currentHealth;
+    protected long lastAttackTime;
+    protected int attackDamage;
+    protected long attackCooldown; // en millisecondes
     
     public Player(int health, int damage, double speed) {
         this.x = 400;
@@ -19,11 +22,24 @@ public abstract class Player {
         this.speed = speed;
         this.maxHealth = health;
         this.currentHealth = health;
+        this.attackDamage = damage;
+        this.lastAttackTime = 0;
         
         sprite = new ImageView();
         sprite.setFitWidth(50);
         sprite.setFitHeight(50);
         sprite.setPreserveRatio(true);
+    }
+    
+    public boolean canAttack() {
+        return System.currentTimeMillis() - lastAttackTime >= attackCooldown;
+    }
+    
+    public void performAttack() {
+        if (canAttack()) {
+            attack();
+            lastAttackTime = System.currentTimeMillis();
+        }
     }
     
     public abstract void attack();

@@ -7,7 +7,8 @@ public class Wizard extends Player {
     private int mana;
     
     public Wizard() {
-        super(100, 15, 3.0); // vie = 100, dégâts = 15, vitesse = 3
+        super(100, 20, 3.0); // vie = 100, dégâts = 20, vitesse = 3
+        this.attackCooldown = 1000; // Attaque normale (1 seconde)
         this.mana = 100;
         try {
             // Chargement des deux sprites

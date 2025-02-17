@@ -126,7 +126,7 @@ public class GameScene {
             double spawnY = platform.getY() - 130; // Juste au-dessus de la plateforme
             Demon demon = new Demon(spawnX, spawnY);
             demons.add(demon);
-            root.getChildren().add(demon.getSprite());
+            root.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
         }));
         timeline.play();
         
@@ -148,8 +148,25 @@ public class GameScene {
         scene.setOnKeyPressed(e -> {
             System.out.println("Touche pressée: " + e.getCode()); // Debug
             activeKeys.add(e.getCode());
-            if (e.getCode() == KeyCode.UP && !isJumping) {  // Changé de SPACE à UP
+            if (e.getCode() == KeyCode.UP && !isJumping) {
                 jump();
+            }
+            // Gestion de l'attaque avec la touche A
+            if (e.getCode() == KeyCode.A && !isGameOver) {
+                // Vérifier si un démon est à portée
+                for (Demon demon : new ArrayList<>(demons)) {
+                    if (isInRange(player, demon, 140)) {
+                        demon.takeDamage(player.attackDamage);
+                        System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
+                        
+                        // Vérifier si le démon est mort
+                        if (demon.isDead()) {
+                            root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
+                            demons.remove(demon);
+                        }
+                    }
+                }
+                player.performAttack();
             }
         });
         
@@ -157,6 +174,12 @@ public class GameScene {
             System.out.println("Touche relâchée: " + e.getCode()); // Debug
             activeKeys.remove(e.getCode());
         });
+    }
+    
+    private boolean isInRange(Player player, Demon demon, double range) {
+        double dx = player.x - demon.getX();
+        double dy = player.y - demon.getY();
+        return Math.sqrt(dx * dx + dy * dy) <= range;
     }
     
     private void startGameLoop() {

@@ -5,7 +5,8 @@ import javafx.scene.image.ImageView;
 
 public class Assassin extends Player {
     public Assassin() {
-        super(80, 25, 5.0); // Moins de vie, plus de dégâts, plus rapide
+        super(80, 15, 5.0); // Moins de vie, dégâts réduits, plus rapide
+        this.attackCooldown = 500; // Attaque très rapide (0.5 seconde)
         try {
             String imagePath = "/com/projet/projet/images/assasin.png";
             sprite.setImage(new Image(getClass().getResourceAsStream(imagePath)));
