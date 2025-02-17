@@ -24,6 +24,7 @@ import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
 import java.util.Random;
+import javafx.scene.shape.Circle;
 
 public class GameScene {
     private static final int GAME_WIDTH = HelloApplication.WINDOW_WIDTH;
@@ -55,6 +56,14 @@ public class GameScene {
     private Random random = new Random();
     private long lastDamageTime = 0;
     private static final long DAMAGE_COOLDOWN = 1000; // 1 second
+    private Rectangle inventorySlot1;
+    private Rectangle inventorySlot2;
+    private Circle potionIndicator1;
+    private Circle potionIndicator2;
+    private List<Potion> potions;
+    private Timeline potionSpawnTimeline;
+    private boolean hasPotion1 = false;
+    private boolean hasPotion2 = false;
     
     public GameScene(Player player) {
         this.player = player;
@@ -64,6 +73,7 @@ public class GameScene {
         this.traversablePlatforms = new ArrayList<>();
         this.demons = new ArrayList<>();
         this.startTime = System.currentTimeMillis();
+        this.potions = new ArrayList<>();
         
         System.out.println("GameScene créée"); // Debug
         
@@ -162,6 +172,32 @@ public class GameScene {
         // Création de l'écran de Game Over
         createGameOverScreen();
         
+        // Création des slots d'inventaire
+        inventorySlot1 = new Rectangle(GAME_WIDTH / 2 - 55, GAME_HEIGHT - 70, 50, 50);
+        inventorySlot2 = new Rectangle(GAME_WIDTH / 2 + 5, GAME_HEIGHT - 70, 50, 50);
+        
+        inventorySlot1.setFill(Color.TRANSPARENT);
+        inventorySlot2.setFill(Color.TRANSPARENT);
+        inventorySlot1.setStroke(Color.WHITE);
+        inventorySlot2.setStroke(Color.WHITE);
+        
+        // Indicateurs de potions (initialement invisibles)
+        potionIndicator1 = new Circle(inventorySlot1.getX() + 25, inventorySlot1.getY() + 25, 10, Color.RED);
+        potionIndicator2 = new Circle(inventorySlot2.getX() + 25, inventorySlot2.getY() + 25, 10, Color.RED);
+        potionIndicator1.setVisible(false);
+        potionIndicator2.setVisible(false);
+        
+        root.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
+        
+        // Configuration du spawn de potions
+        potionSpawnTimeline = new Timeline(new KeyFrame(Duration.seconds(10), event -> {
+            if (!isGameOver && potions.size() < 3) {
+                spawnPotion();
+            }
+        }));
+        potionSpawnTimeline.setCycleCount(Timeline.INDEFINITE);
+        potionSpawnTimeline.play();
+        
         // Crée la Scene
         scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
         
@@ -175,26 +211,22 @@ public class GameScene {
         
         // Ajoute les gestionnaires d'événements à la Scene
         scene.setOnKeyPressed(e -> {
-            System.out.println("Touche pressée: " + e.getCode()); // Debug
+            System.out.println("Touche pressée: " + e.getCode());
             activeKeys.add(e.getCode());
-            if (e.getCode() == KeyCode.UP && !isJumping) {
-                jump();
-            }
-            if (e.getCode() == KeyCode.A && !isGameOver) {
-                for (Demon demon : new ArrayList<>(demons)) {
-                    if (isInRange(player, demon, 140)) {
-                        demon.takeDamage(player.attackDamage);
-                        System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
-                        
-                        if (demon.isDead()) {
-                            root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
-                            demons.remove(demon);
-                            demonKillCount++;
-                            killCountText.setText("Démons tués: " + demonKillCount);
-                        }
-                    }
-                }
-                player.performAttack();
+            
+            switch (e.getCode()) {
+                case UP:
+                    if (!isJumping) jump();
+                    break;
+                case A:
+                    if (!isGameOver) handleAttack();
+                    break;
+                case E:
+                    if (hasPotion1) usePotion(1);
+                    break;
+                case R:
+                    if (hasPotion2) usePotion(2);
+                    break;
             }
         });
         
@@ -229,6 +261,7 @@ public class GameScene {
             updateDemons();
             updateHealthBar();
             updateTimer();
+            checkPotionCollision();
             checkGameOver();
         }
     }
@@ -450,6 +483,62 @@ public class GameScene {
         long currentTime = System.currentTimeMillis();
         long elapsedSeconds = (currentTime - startTime) / 1000;
         timerText.setText(String.format("Temps: %ds", elapsedSeconds));
+    }
+    
+    private void spawnPotion() {
+        Rectangle platform = traversablePlatforms.get(random.nextInt(traversablePlatforms.size()));
+        double potionX = platform.getX() + random.nextDouble() * (platform.getWidth() - 20) + 10;
+        double potionY = platform.getY() - 20;
+        
+        Potion potion = new Potion(potionX, potionY);
+        potions.add(potion);
+        root.getChildren().add(potion.getSprite());
+    }
+    
+    private void usePotion(int slot) {
+        player.heal(30);
+        if (slot == 1) {
+            hasPotion1 = false;
+            potionIndicator1.setVisible(false);
+        } else {
+            hasPotion2 = false;
+            potionIndicator2.setVisible(false);
+        }
+    }
+    
+    private void checkPotionCollision() {
+        for (Potion potion : new ArrayList<>(potions)) {
+            if (player.sprite.getBoundsInParent().intersects(potion.getSprite().getBoundsInParent())) {
+                if (!hasPotion1) {
+                    hasPotion1 = true;
+                    potionIndicator1.setVisible(true);
+                    root.getChildren().remove(potion.getSprite());
+                    potions.remove(potion);
+                } else if (!hasPotion2) {
+                    hasPotion2 = true;
+                    potionIndicator2.setVisible(true);
+                    root.getChildren().remove(potion.getSprite());
+                    potions.remove(potion);
+                }
+            }
+        }
+    }
+    
+    private void handleAttack() {
+        for (Demon demon : new ArrayList<>(demons)) {
+            if (isInRange(player, demon, 140)) {
+                demon.takeDamage(player.attackDamage);
+                System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
+                
+                if (demon.isDead()) {
+                    root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
+                    demons.remove(demon);
+                    demonKillCount++;
+                    killCountText.setText("Démons tués: " + demonKillCount);
+                }
+            }
+        }
+        player.performAttack();
     }
     
     public Scene getScene() {
