@@ -64,6 +64,15 @@ public class GameScene {
     private Timeline potionSpawnTimeline;
     private boolean hasPotion1 = false;
     private boolean hasPotion2 = false;
+    private int currentWave = 0;
+    private static final int MAX_WAVES = 30;
+    private Text waveText;
+    private Text waveBigAnnouncement;
+    private boolean isWaveInProgress = false;
+    private Timeline waveSpawnTimeline;
+    private int remainingDemonsToSpawn = 0;
+    private VBox pauseMenu;
+    private boolean isPaused = false;
     
     public GameScene(Player player) {
         this.player = player;
@@ -74,6 +83,7 @@ public class GameScene {
         this.demons = new ArrayList<>();
         this.startTime = System.currentTimeMillis();
         this.potions = new ArrayList<>();
+        this.currentWave = 0;
         
         System.out.println("GameScene créée"); // Debug
         
@@ -140,38 +150,27 @@ public class GameScene {
         
         root.getChildren().addAll(healthBarBackground, healthBarForeground);
         
-        // Création du compteur de démons tués
-        killCountText = new Text("Démons tués: 0");
-        killCountText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        killCountText.setFill(Color.RED);
-        killCountText.setStroke(Color.BLACK);
-        killCountText.setStrokeWidth(1);
-        killCountText.setX(GAME_WIDTH - 180);
-        killCountText.setY(30);
+        // Remplacer le compteur de démons par le compteur de vagues
+        waveText = new Text("Vague: 1/" + MAX_WAVES);
+        waveText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        waveText.setFill(Color.RED);
+        waveText.setStroke(Color.BLACK);
+        waveText.setStrokeWidth(1);
+        waveText.setX(GAME_WIDTH - 180);
+        waveText.setY(30);
 
-        // Création du timer
-        timerText = new Text("Temps: 0s");
-        timerText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        timerText.setFill(Color.WHITE);
-        timerText.setStroke(Color.BLACK);
-        timerText.setStrokeWidth(1);
-        timerText.setX(GAME_WIDTH / 2 - 50);
-        timerText.setY(30);
+        // Création de l'annonce de vague
+        waveBigAnnouncement = new Text("");
+        waveBigAnnouncement.setFont(Font.font("Arial Black", 72));
+        waveBigAnnouncement.setFill(Color.WHITE);
+        waveBigAnnouncement.setStroke(Color.BLACK);
+        waveBigAnnouncement.setStrokeWidth(3);
+        waveBigAnnouncement.setVisible(false);
+        waveBigAnnouncement.setX(GAME_WIDTH / 2 - 200);
+        waveBigAnnouncement.setY(GAME_HEIGHT / 2);
 
-        root.getChildren().addAll(killCountText, timerText);
+        root.getChildren().addAll(waveText, waveBigAnnouncement);
 
-        // Configuration du respawn aléatoire des démons
-        spawnTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
-            if (!isGameOver && demons.size() < 3) { // Maximum 3 démons à la fois
-                spawnDemon();
-            }
-        }));
-        spawnTimeline.setCycleCount(Timeline.INDEFINITE);
-        spawnTimeline.play();
-        
-        // Création de l'écran de Game Over
-        createGameOverScreen();
-        
         // Création des slots d'inventaire
         inventorySlot1 = new Rectangle(GAME_WIDTH / 2 - 55, GAME_HEIGHT - 70, 50, 50);
         inventorySlot2 = new Rectangle(GAME_WIDTH / 2 + 5, GAME_HEIGHT - 70, 50, 50);
@@ -181,6 +180,20 @@ public class GameScene {
         inventorySlot1.setStroke(Color.WHITE);
         inventorySlot2.setStroke(Color.WHITE);
         
+        // Initialisation du timerText
+        timerText = new Text("Temps: 0s");
+        timerText.setFont(Font.font("Arial Black", FontWeight.BOLD, 24));
+        timerText.setFill(Color.WHITE);
+        timerText.setStroke(Color.BLACK);
+        timerText.setStrokeWidth(2);
+        DropShadow timerShadow = new DropShadow();
+        timerShadow.setColor(Color.rgb(0, 0, 0, 0.7));
+        timerShadow.setRadius(5);
+        timerText.setEffect(timerShadow);
+        timerText.setX(GAME_WIDTH / 2 - 60);
+        timerText.setY(40);
+        root.getChildren().add(timerText);
+        
         // Indicateurs de potions (initialement invisibles)
         potionIndicator1 = new Circle(inventorySlot1.getX() + 25, inventorySlot1.getY() + 25, 10, Color.RED);
         potionIndicator2 = new Circle(inventorySlot2.getX() + 25, inventorySlot2.getY() + 25, 10, Color.RED);
@@ -189,21 +202,19 @@ public class GameScene {
         
         root.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
         
-        // Configuration du spawn de potions
-        potionSpawnTimeline = new Timeline(new KeyFrame(Duration.seconds(10), event -> {
-            if (!isGameOver && potions.size() < 3) {
-                spawnPotion();
-            }
-        }));
-        potionSpawnTimeline.setCycleCount(Timeline.INDEFINITE);
-        potionSpawnTimeline.play();
-        
         // Crée la Scene
         scene = new Scene(root, GAME_WIDTH, GAME_HEIGHT);
         
         // Configure les contrôles sur la Scene au lieu du Pane
         setupControls();
         startGameLoop();
+        
+        // Créer l'écran de game over et le menu pause
+        createGameOverScreen();
+        createPauseMenu();
+        
+        // Démarrer la première vague à la fin de l'initialisation
+        startNextWave();
     }
     
     private void setupControls() {
@@ -226,6 +237,9 @@ public class GameScene {
                     break;
                 case R:
                     if (hasPotion2) usePotion(2);
+                    break;
+                case ESCAPE:
+                    togglePauseMenu();
                     break;
             }
         });
@@ -254,7 +268,7 @@ public class GameScene {
     }
     
     private void update() {
-        if (!isGameOver) {
+        if (!isGameOver && !isPaused) {
             handleMovement();
             applyGravity();
             checkCollision();
@@ -347,6 +361,9 @@ public class GameScene {
     }
     
     private void updateDemons() {
+        // Supprimer les démons morts de la liste
+        demons.removeIf(demon -> demon.isDead());
+
         for (Demon demon : demons) {
             // Vérifier si une plateforme bloque le chemin direct vers le joueur
             boolean canSeePlayer = true;
@@ -377,6 +394,14 @@ public class GameScene {
             }
             for (Rectangle platform : traversablePlatforms) {
                 demon.checkCollision(platform);
+            }
+        }
+
+        // Vérifier si la vague est terminée (plus de démons à spawn ET plus de démons vivants)
+        if (isWaveInProgress && remainingDemonsToSpawn == 0 && demons.isEmpty()) {
+            isWaveInProgress = false;
+            if (currentWave < MAX_WAVES) {
+                startNextWave();
             }
         }
     }
@@ -459,10 +484,23 @@ public class GameScene {
     }
 
     private void restartGame() {
-        // Retour au menu principal
+        // Créer une nouvelle instance de la même classe de joueur
+        Player newPlayer;
+        if (player instanceof Warrior) {
+            newPlayer = new Warrior();
+        } else if (player instanceof Wizard) {
+            newPlayer = new Wizard();
+        } else if (player instanceof Assassin) {
+            newPlayer = new Assassin();
+        } else if (player instanceof Doctor) {
+            newPlayer = new Doctor();
+        } else {
+            return; // Ne devrait jamais arriver
+        }
+        
+        // Créer une nouvelle scène avec le même type de joueur
         Stage stage = (Stage) scene.getWindow();
-        GameManager gameManager = new GameManager();
-        stage.setScene(new Scene(gameManager.getClassSelectionMenu(), GAME_WIDTH, GAME_HEIGHT));
+        stage.setScene(new GameScene(newPlayer).getScene());
     }
     
     private void returnToMenu() {
@@ -534,11 +572,122 @@ public class GameScene {
                     root.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
                     demons.remove(demon);
                     demonKillCount++;
-                    killCountText.setText("Démons tués: " + demonKillCount);
+                    
+                    // Spawn une potion tous les 5 monstres tués si l'inventaire n'est pas plein
+                    if (demonKillCount % 5 == 0 && !hasPotion1 && !hasPotion2) {
+                        spawnPotion();
+                    }
+
+                    // Vérifier si c'était le dernier démon de la vague
+                    if (isWaveInProgress && remainingDemonsToSpawn == 0 && demons.isEmpty()) {
+                        isWaveInProgress = false;
+                        if (currentWave < MAX_WAVES) {
+                            startNextWave();
+                        }
+                    }
                 }
             }
         }
         player.performAttack();
+    }
+    
+    private void startNextWave() {
+        if (currentWave >= MAX_WAVES) return;
+        
+        currentWave++;
+        
+        // Calculer le nombre de démons pour cette vague
+        remainingDemonsToSpawn = calculateDemonsForWave(currentWave);
+        
+        // Afficher l'annonce de la vague
+        waveBigAnnouncement.setText("VAGUE " + currentWave);
+        waveText.setText("Vague: " + currentWave + "/" + MAX_WAVES);
+        waveBigAnnouncement.setVisible(true);
+        
+        // Timeline pour cacher l'annonce après 2.5 secondes et commencer le spawn
+        Timeline announcementTimeline = new Timeline(new KeyFrame(Duration.seconds(2.5), event -> {
+            waveBigAnnouncement.setVisible(false);
+            startWaveSpawning();
+        }));
+        announcementTimeline.play();
+    }
+
+    private int calculateDemonsForWave(int wave) {
+        if (wave == 1) return 1;
+        if (wave == 2) return 2;
+        if (wave == 3) return 4;
+        return Math.min(wave * 2, 15); // Maximum 15 démons par vague
+    }
+
+    private void startWaveSpawning() {
+        isWaveInProgress = true;
+        
+        waveSpawnTimeline = new Timeline(new KeyFrame(Duration.seconds(0.7), event -> {
+            if (remainingDemonsToSpawn > 0) {
+                spawnDemon();
+                remainingDemonsToSpawn--;
+            } else {
+                waveSpawnTimeline.stop();
+                // On ne met pas isWaveInProgress à false tant que tous les démons ne sont pas morts
+                // La vague reste en cours tant qu'il reste des démons
+            }
+        }));
+        waveSpawnTimeline.setCycleCount(Timeline.INDEFINITE);
+        waveSpawnTimeline.play();
+    }
+    
+    private void createPauseMenu() {
+        pauseMenu = new VBox(40);
+        pauseMenu.setAlignment(Pos.CENTER);
+        pauseMenu.setStyle("-fx-background-color: rgba(0, 0, 0, 0.85);");
+        pauseMenu.setPrefSize(GAME_WIDTH, GAME_HEIGHT);
+
+        Text pauseText = new Text("PAUSE");
+        pauseText.setFont(Font.font("Arial Black", 80));
+        pauseText.setFill(Color.WHITE);
+        pauseText.setStroke(Color.BLACK);
+        pauseText.setStrokeWidth(2);
+        
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.7));
+        shadow.setRadius(10);
+        pauseText.setEffect(shadow);
+
+        Button resumeButton = new Button("Reprendre");
+        Button restartButton = new Button("Recommencer");
+        Button menuButton = new Button("Menu Principal");
+
+        // Style commun pour les boutons
+        String buttonStyle = "-fx-background-color: #4CAF50;" +
+                           "-fx-text-fill: white;" +
+                           "-fx-font-size: 24px;" +
+                           "-fx-background-radius: 25;" +
+                           "-fx-padding: 15 30;";
+
+        resumeButton.setPrefWidth(250);
+        resumeButton.setPrefHeight(50);
+        resumeButton.setStyle(buttonStyle);
+
+        restartButton.setPrefWidth(250);
+        restartButton.setPrefHeight(50);
+        restartButton.setStyle(buttonStyle.replace("#4CAF50", "#2196F3"));
+
+        menuButton.setPrefWidth(250);
+        menuButton.setPrefHeight(50);
+        menuButton.setStyle(buttonStyle.replace("#4CAF50", "#f44336"));
+
+        resumeButton.setOnAction(e -> togglePauseMenu());
+        restartButton.setOnAction(e -> restartGame());
+        menuButton.setOnAction(e -> returnToMenu());
+
+        pauseMenu.getChildren().addAll(pauseText, resumeButton, restartButton, menuButton);
+        pauseMenu.setVisible(false);
+        root.getChildren().add(pauseMenu);
+    }
+
+    private void togglePauseMenu() {
+        isPaused = !isPaused;
+        pauseMenu.setVisible(isPaused);
     }
     
     public Scene getScene() {
