@@ -17,7 +17,7 @@ public class Demon extends Skeleton {
     private boolean isAttacking = false;
     private long lastAttackTime = 0;
     private static final long ATTACK_COOLDOWN = 2000; // 2 secondes entre chaque attaque
-    private static final double ATTACK_RANGE = 150; // Portée d'attaque
+    private static final double ATTACK_RANGE = 45; // Portée d'attaque
     private static final int ATTACK_DAMAGE = 5; // Dégâts par attaque
     
     public Demon(double x, double y) {
@@ -31,8 +31,8 @@ public class Demon extends Skeleton {
             this.sprite = new ImageView(idleImage);
             this.sprite.setX(x);
             this.sprite.setY(y);
-            this.sprite.setFitWidth(40);  // Réduit de 50 à 40
-            this.sprite.setFitHeight(40); // Réduit de 50 à 40
+            this.sprite.setFitWidth(180);  // Réduit de 50 à 40
+            this.sprite.setFitHeight(180); // Réduit de 50 à 40
         } catch (Exception e) {
             System.err.println("Erreur chargement image demon: " + e.getMessage());
         }

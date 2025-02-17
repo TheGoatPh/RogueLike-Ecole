@@ -123,7 +123,7 @@ public class GameScene {
         Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
             // Spawn le démon sur la plateforme principale
             double spawnX = platform.getX() + platform.getWidth() - 100; // Un peu avant la fin de la plateforme
-            double spawnY = platform.getY() - 50; // Juste au-dessus de la plateforme
+            double spawnY = platform.getY() - 130; // Juste au-dessus de la plateforme
             Demon demon = new Demon(spawnX, spawnY);
             demons.add(demon);
             root.getChildren().add(demon.getSprite());
