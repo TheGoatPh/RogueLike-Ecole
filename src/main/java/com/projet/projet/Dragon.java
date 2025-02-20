@@ -4,6 +4,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 import java.util.Objects;
 
@@ -98,17 +101,13 @@ public class Dragon {
             player.takeDamage(ATTACK_DAMAGE);
         }
         
-        // Retourner à l'animation idle après un court délai
-        new Thread(() -> {
-            try {
-                Thread.sleep(1000); // Durée de l'animation d'attaque
-                if (!isAttacking) {
-                    sprite.setImage(idleImage);
-                }
-            } catch (InterruptedException e) {
-                System.err.println("Erreur chargement image dragon: " + e.getMessage());
+        // Utiliser Timeline au lieu de Thread.sleep
+        Timeline attackAnimation = new Timeline(new KeyFrame(Duration.millis(1000), event -> {
+            if (!isAttacking) {
+                sprite.setImage(idleImage);
             }
-        }).start();
+        }));
+        attackAnimation.play();
     }
     
     public void checkCollision(Rectangle platform) {

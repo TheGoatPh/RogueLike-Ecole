@@ -15,6 +15,10 @@ public abstract class Player {
     protected long lastAttackTime;
     protected int attackDamage;
     protected long attackCooldown; // en millisecondes
+    protected long lastSpecialAbilityTime = 0;
+    protected static final long SPECIAL_ABILITY_COOLDOWN = 10000; // 10 secondes
+    protected boolean isSpecialActive = false;
+    protected long specialAbilityEndTime = 0;
     
     public Player(int health, int damage, double speed) {
         this.x = 400;
@@ -69,5 +73,15 @@ public abstract class Player {
     
     public int getMaxHealth() {
         return maxHealth;
+    }
+
+    public boolean canUseSpecialAbility() {
+        return System.currentTimeMillis() - lastSpecialAbilityTime >= SPECIAL_ABILITY_COOLDOWN;
+    }
+
+    public double getSpecialCooldownPercentage() {
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - lastSpecialAbilityTime;
+        return Math.min(1.0, (double) elapsedTime / SPECIAL_ABILITY_COOLDOWN);
     }
 } 

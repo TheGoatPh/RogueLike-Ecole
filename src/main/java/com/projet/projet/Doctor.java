@@ -36,13 +36,13 @@ public class Doctor extends Player {
         }
     }
 
-    // TO DO: IMPLEMENTER
     @Override
     public void useSpecialAbility() {
-        if (healingPower >= 30) {
-            // Zone de soin
-            healingPower -= 30;
-            System.out.println("Le docteur crée une zone de soin !");
+        if (canUseSpecialAbility()) {
+            int missingHealth = maxHealth - currentHealth;
+            heal(missingHealth / 3);
+            lastSpecialAbilityTime = System.currentTimeMillis();
+            System.out.println("Le docteur se soigne !");
         }
     }
 

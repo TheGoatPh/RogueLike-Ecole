@@ -32,11 +32,14 @@ public class Warrior extends Player {
     
     @Override
     public void useSpecialAbility() {
-        isDefending = !isDefending;
-        if (isDefending) {
-            System.out.println("Le guerrier se met en position défensive !");
-        } else {
-            System.out.println("Le guerrier arrête de se défendre !");
+        if (canUseSpecialAbility()) {
+            int missingHealth = maxHealth - currentHealth;
+            int shieldAmount = missingHealth / 3;
+            currentHealth += shieldAmount;
+            isSpecialActive = true;
+            lastSpecialAbilityTime = System.currentTimeMillis();
+            specialAbilityEndTime = System.currentTimeMillis() + 5000; // 5 secondes
+            System.out.println("Le guerrier active son bouclier !");
         }
     }
 

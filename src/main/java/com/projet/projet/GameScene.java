@@ -5,9 +5,7 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
 import java.util.*;
-
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -70,6 +68,8 @@ public class GameScene extends Pane {
     private int remainingDemonsToSpawn = 0;
     private VBox pauseMenu;
     private boolean isPaused = false;
+    private Rectangle cooldownBar;
+    private Text specialAbilityText;
     
     public GameScene(Player player) {
         this(player, null);
@@ -96,9 +96,36 @@ public class GameScene extends Pane {
             this.startTime = System.currentTimeMillis();
         }
         
-        System.out.println("GameScene créée"); // Debug
+        setupUI();
+        setupControls();
+        startGameLoop();
+        createGameOverScreen();
+        createPauseMenu();
+        startNextWave();
+    }
+
+    private void setupUI() {
+        setupBackground();
+        setupPlatforms();
+        setupHealthBar();
+        setupWaveUI();
+        setupInventory();
+        setupSpecialAbility();
         
-        // Charge img de fond
+        // Initialisation du timer
+        timerText = new Text("0s");
+        timerText.setFont(Font.font("Arial", FontWeight.BOLD, 36));
+        timerText.setFill(Color.WHITE);
+        timerText.setStroke(Color.BLACK);
+        timerText.setStrokeWidth(2);
+        timerText.setX(GAME_WIDTH / 2 - 50);
+        timerText.setY(50);
+        this.getChildren().add(timerText);
+        
+        scene = new Scene(this, GAME_WIDTH, GAME_HEIGHT);
+    }
+
+    private void setupBackground() {
         try {
             Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/projet/projet/images/background.jpg")));
             ImageView background = new ImageView(backgroundImage);
@@ -110,139 +137,34 @@ public class GameScene extends Pane {
             Rectangle fallbackBackground = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
             this.getChildren().add(fallbackBackground);
         }
+    }
 
-        // Plateforme principale plus haute
-        platform = new Rectangle(720, 30, Color.TRANSPARENT);
-        platform.setX(115);
-        platform.setY(GAME_HEIGHT * 0.65);
-        
-        // Plateformes latérales ajustées
-        Rectangle rectangleGauche = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
-        rectangleGauche.setX(GAME_WIDTH * 0.05);
-        rectangleGauche.setY(platform.getY() - 160);
-        
-        Rectangle rectangleDroit = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
-        rectangleDroit.setX(GAME_WIDTH * 0.75);
-        rectangleDroit.setY(platform.getY() - 160);
-        
-        // Plateforme centrale ajustée
-        Rectangle rectangleCentre = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
-        rectangleCentre.setX(GAME_WIDTH * 0.4);
-        rectangleCentre.setY(platform.getY() - 200);
-        
-        // Ajout des plateformes traversables
-        traversablePlatforms.add(rectangleGauche);
-        traversablePlatforms.add(rectangleCentre);
-        traversablePlatforms.add(rectangleDroit);
-        
-        // Ajout de la plateforme principale non-traversable
-        platforms.add(platform);
-        
-        // Ajout de tous les rectangles à la scène
-        this.getChildren().addAll(platform, rectangleGauche, rectangleCentre, rectangleDroit);
-        
-        // Ajoute le sprite du joueur à la scène
-        this.getChildren().add(player.sprite);
-        
-        // Position initiale du sprite
-        player.sprite.setX(player.x);
-        player.sprite.setY(player.y);
-        System.out.println("Position initiale - X: " + player.x + ", Y: " + player.y); // Debug
-        
-        // Création de la barre de vie
-        healthBarBackground = new Rectangle(20, 20, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
-        healthBarBackground.setFill(Color.DARKRED);
-        
-        healthBarForeground = new Rectangle(20, 20, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
-        healthBarForeground.setFill(Color.GREEN);
-        
-        this.getChildren().addAll(healthBarBackground, healthBarForeground);
-        
-        // Remplacer le compteur de démons par le compteur de vagues
-        waveText = new Text("Vague: 1/" + MAX_WAVES);
-        waveText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        waveText.setFill(Color.RED);
-        waveText.setStroke(Color.BLACK);
-        waveText.setStrokeWidth(1);
-        waveText.setX(GAME_WIDTH - 180);
-        waveText.setY(30);
+    private void setupSpecialAbility() {
+        VBox specialAbilityContainer = new VBox(5);
+        specialAbilityContainer.setTranslateX(20);
+        specialAbilityContainer.setTranslateY(80);
 
-        // Création de l'annonce de vague
-        waveBigAnnouncement = new Text("");
-        waveBigAnnouncement.setFont(Font.font("Arial Black", 72));
-        waveBigAnnouncement.setFill(Color.WHITE);
-        waveBigAnnouncement.setStroke(Color.BLACK);
-        waveBigAnnouncement.setStrokeWidth(3);
-        waveBigAnnouncement.setVisible(false);
-        waveBigAnnouncement.setX(GAME_WIDTH / 2 - 200);
-        waveBigAnnouncement.setY(GAME_HEIGHT / 2);
+        specialAbilityText = new Text("Capacité Spéciale (Z)");
+        specialAbilityText.setFont(Font.font("Arial Black", FontWeight.BOLD, 14));
+        specialAbilityText.setFill(Color.WHITE);
+        specialAbilityText.setStroke(Color.BLACK);
+        specialAbilityText.setStrokeWidth(1);
 
-        this.getChildren().addAll(waveText, waveBigAnnouncement);
+        cooldownBar = new Rectangle(120, 8);
+        cooldownBar.setArcWidth(10);
+        cooldownBar.setArcHeight(10);
+        cooldownBar.setStroke(Color.WHITE);
+        cooldownBar.setStrokeWidth(2);
 
-        // Création des slots d'inventaire
-        inventorySlot1 = new Rectangle(GAME_WIDTH / 2 - 55, GAME_HEIGHT - 70, 50, 50);
-        inventorySlot2 = new Rectangle(GAME_WIDTH / 2 + 5, GAME_HEIGHT - 70, 50, 50);
-        
-        inventorySlot1.setFill(Color.TRANSPARENT);
-        inventorySlot2.setFill(Color.TRANSPARENT);
-        inventorySlot1.setStroke(Color.WHITE);
-        inventorySlot2.setStroke(Color.WHITE);
-        
-        // Initialisation du timerText
-        timerText = new Text("Temps: 0s");
-        timerText.setFont(Font.font("Arial Black", FontWeight.BOLD, 24));
-        timerText.setFill(Color.WHITE);
-        timerText.setStroke(Color.BLACK);
-        timerText.setStrokeWidth(2);
-        DropShadow timerShadow = new DropShadow();
-        timerShadow.setColor(Color.rgb(0, 0, 0, 0.7));
-        timerShadow.setRadius(5);
-        timerText.setEffect(timerShadow);
-        timerText.setX(GAME_WIDTH / 2 - 60);
-        timerText.setY(40);
-        this.getChildren().add(timerText);
-        
-        // Indicateurs de potions (initialement invisibles)
-        try {
-            Image potionImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/projet/projet/images/potion.png")));
-            
-            // Création des indicateurs de potions avec l'image
-            potionIndicator1 = new ImageView(potionImage);
-            potionIndicator2 = new ImageView(potionImage);
-            
-            // Ajuster la taille des images
-            potionIndicator1.setFitWidth(40);
-            potionIndicator1.setFitHeight(40);
-            potionIndicator2.setFitWidth(40);
-            potionIndicator2.setFitHeight(40);
-            
-            // Positionner les images au centre des slots
-            potionIndicator1.setX(inventorySlot1.getX() + 5);
-            potionIndicator1.setY(inventorySlot1.getY() + 5);
-            potionIndicator2.setX(inventorySlot2.getX() + 5);
-            potionIndicator2.setY(inventorySlot2.getY() + 5);
-            
-            potionIndicator1.setVisible(false);
-            potionIndicator2.setVisible(false);
-        } catch (Exception e) {
-            System.err.println("Erreur lors du chargement de l'image de potion: " + e.getMessage());
-        }
-        
-        this.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
-        
-        // Crée la Scene
-        scene = new Scene(this, GAME_WIDTH, GAME_HEIGHT);
-        
-        // Configure les contrôles
-        setupControls();
-        startGameLoop();
-        
-        // Créer l'écran de game over et le menu pause
-        createGameOverScreen();
-        createPauseMenu();
-        
-        // Démarrer la première vague
-        startNextWave();
+        DropShadow glow = new DropShadow();
+        glow.setColor(Color.YELLOW);
+        glow.setRadius(10);
+
+        specialAbilityText.setEffect(glow);
+        cooldownBar.setEffect(new DropShadow(5, Color.BLACK));
+
+        specialAbilityContainer.getChildren().addAll(specialAbilityText, cooldownBar);
+        this.getChildren().add(specialAbilityContainer);
     }
     
     private void setupControls() {
@@ -265,6 +187,9 @@ public class GameScene extends Pane {
                     break;
                 case R:
                     if (hasPotion2) usePotion(2);
+                    break;
+                case Z:
+                    if (!isGameOver) player.useSpecialAbility();
                     break;
                 case ESCAPE:
                     togglePauseMenu();
@@ -305,6 +230,8 @@ public class GameScene extends Pane {
             updateTimer();
             checkPotionCollision();
             checkGameOver();
+            updateCooldownBar();
+            checkSpecialAbilityEffects();
         }
     }
     
@@ -335,18 +262,35 @@ public class GameScene extends Pane {
     private void checkCollision() {
         boolean onPlatform = false;
         
-        // Vérification pour toutes les plateformes
+        // Vérification pour toutes les plateformes traversables
         for (Rectangle currentPlatform : traversablePlatforms) {
             if (player.sprite.getBoundsInParent().intersects(currentPlatform.getBoundsInParent())) {
-                if (verticalVelocity > 0 && // Si le joueur descend
-                    player.y + player.sprite.getFitHeight() - 10 <= currentPlatform.getY() && // Si le joueur est au-dessus
-                    !activeKeys.contains(KeyCode.DOWN)) { // Et qu'il n'appuie pas sur bas
+                // Si le joueur descend et est au-dessus de la plateforme
+                if (verticalVelocity > 0 && 
+                    player.y + player.sprite.getFitHeight() - 10 <= currentPlatform.getY() && 
+                    !activeKeys.contains(KeyCode.DOWN)) {
                     player.y = currentPlatform.getY() - player.sprite.getFitHeight();
                     player.sprite.setY(player.y);
                     verticalVelocity = 0;
                     isJumping = false;
                     onPlatform = true;
                     break;
+                }
+                // Empêcher le joueur de passer à travers les plateformes par les côtés
+                else if (verticalVelocity >= 0 && player.y + player.sprite.getFitHeight() > currentPlatform.getY()) {
+                    double playerRight = player.x + player.sprite.getFitWidth();
+                    double platformRight = currentPlatform.getX() + currentPlatform.getWidth();
+                    double overlap = 5; // Marge de tolérance
+
+                    // Collision depuis la gauche
+                    if (playerRight > currentPlatform.getX() && playerRight < currentPlatform.getX() + overlap) {
+                        player.x = currentPlatform.getX() - player.sprite.getFitWidth();
+                    }
+                    // Collision depuis la droite
+                    else if (player.x < platformRight && player.x > platformRight - overlap) {
+                        player.x = platformRight;
+                    }
+                    player.sprite.setX(player.x);
                 }
             }
         }
@@ -376,10 +320,22 @@ public class GameScene extends Pane {
     private void updateHealthBar() {
         double healthPercentage = (double) player.getCurrentHealth() / player.getMaxHealth();
         healthBarForeground.setWidth(HEALTH_BAR_WIDTH * healthPercentage);
+        
+        // Changement de couleur en fonction de la vie
+        if (healthPercentage > 0.6) {
+            healthBarForeground.setFill(Color.rgb(0, 255, 0)); // Vert
+        } else if (healthPercentage > 0.3) {
+            healthBarForeground.setFill(Color.rgb(255, 165, 0)); // Orange
+        } else {
+            healthBarForeground.setFill(Color.rgb(255, 0, 0)); // Rouge
+        }
     }
     
     private void handleDemonCollision(Dragon dragon) {
         if (dragon.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
+            if (player instanceof Assassin && ((Assassin)player).isSpecialActive) {
+                return; // Pas de dégâts en mode furtif
+            }
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastDamageTime >= DAMAGE_COOLDOWN) {
                 player.takeDamage(5);
@@ -456,8 +412,19 @@ public class GameScene extends Pane {
             isGameOver = true;
             gameOverScreen.setVisible(true);
             
+            // Arrêter le spawn de nouveaux démons
+            if (waveSpawnTimeline != null) {
+                waveSpawnTimeline.stop();
+            }
+            
+            // Nettoyer les démons existants
+            for (Dragon dragon : new ArrayList<>(dragons)) {
+                this.getChildren().removeAll(dragon.getSprite(), dragon.getHealthBar());
+            }
+            dragons.clear();
+            
             // Mettre à jour le texte en fonction de la cause de la mort
-            Text causeText = (Text) gameOverScreen.getChildren().get(1); // Le deuxième élément est notre texte de score
+            Text causeText = (Text) gameOverScreen.getChildren().get(1);
             if (player.y > FALL_DEATH_Y) {
                 causeText.setText("You Fell to Your Death!");
             } else {
@@ -538,6 +505,8 @@ public class GameScene extends Pane {
     }
     
     private void spawnDemon() {
+        if (isGameOver) return; // Ne pas spawner de démons si le jeu est terminé
+        
         double spawnX = platform.getX() + random.nextDouble() * (platform.getWidth() - 100);
         double spawnY = platform.getY() - 130;
         Dragon dragon = new Dragon(spawnX, spawnY);
@@ -548,7 +517,7 @@ public class GameScene extends Pane {
     private void updateTimer() {
         long currentTime = System.currentTimeMillis();
         long elapsedSeconds = (currentTime - startTime) / 1000;
-        timerText.setText(String.format("Temps: %ds", elapsedSeconds));
+        timerText.setText(String.format("%ds", elapsedSeconds));
     }
     
     private void spawnPotion() {
@@ -593,7 +562,18 @@ public class GameScene extends Pane {
     private void handleAttack() {
         for (Dragon dragon : new ArrayList<>(dragons)) {
             if (isInRange(player, dragon, 140)) {
-                dragon.takeDamage(player.attackDamage);
+                if (player instanceof Wizard) {
+                    Wizard wizard = (Wizard) player;
+                    if (wizard.isLightningActive()) {
+                        // One-shot kill avec l'éclair
+                        dragon.takeDamage(dragon.getCurrentHealth());
+                    } else {
+                        // Attaque normale du Wizard
+                        dragon.takeDamage(player.attackDamage);
+                    }
+                } else {
+                    dragon.takeDamage(player.attackDamage);
+                }
                 System.out.println("Dragon touché ! Vie restante : " + dragon.getCurrentHealth());
                 
                 if (dragon.isDead()) {
@@ -745,4 +725,159 @@ public class GameScene extends Pane {
     public Scene getCurrentScene() {
         return scene;
     }
+
+    private void updateCooldownBar() {
+        double percentage = player.getSpecialCooldownPercentage();
+        cooldownBar.setWidth(100 * percentage);
+        cooldownBar.setFill(percentage >= 1.0 ? Color.YELLOW : Color.GRAY);
+    }
+
+    private void checkSpecialAbilityEffects() {
+        if (player.isSpecialActive && System.currentTimeMillis() >= player.specialAbilityEndTime) {
+            player.isSpecialActive = false;
+            if (player instanceof Warrior) {
+                // Retirer le bouclier
+                player.currentHealth = Math.min(player.currentHealth, player.maxHealth);
+            } else if (player instanceof Wizard) {
+                Wizard wizard = (Wizard) player;
+                if (wizard.isLightningActive()) {
+                    // Frappe tous les dragons avec la moitié de leurs PV
+                    for (Dragon dragon : new ArrayList<>(dragons)) {
+                        dragon.takeDamage(dragon.getCurrentHealth() / 2);
+                        if (dragon.isDead()) {
+                            this.getChildren().removeAll(dragon.getSprite(), dragon.getHealthBar());
+                            dragons.remove(dragon);
+                            demonKillCount++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void setupPlatforms() {
+        // Plateforme principale plus haute
+        platform = new Rectangle(720, 30, Color.TRANSPARENT);
+        platform.setX(115);
+        platform.setY(GAME_HEIGHT * 0.65);
+        
+        // Plateformes latérales ajustées
+        Rectangle rectangleGauche = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
+        rectangleGauche.setX(GAME_WIDTH * 0.05);
+        rectangleGauche.setY(platform.getY() - 160);
+        
+        Rectangle rectangleDroit = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
+        rectangleDroit.setX(GAME_WIDTH * 0.75);
+        rectangleDroit.setY(platform.getY() - 160);
+        
+        // Plateforme centrale ajustée (maintenant traversable et plus haute)
+        Rectangle rectangleCentre = new Rectangle(GAME_WIDTH * 0.2, 30, Color.TRANSPARENT);
+        rectangleCentre.setX(GAME_WIDTH * 0.4);
+        rectangleCentre.setY(platform.getY() - 200); // 40 pixels plus haut que les plateformes latérales
+        
+        // Ajout des plateformes traversables
+        traversablePlatforms.add(rectangleGauche);
+        traversablePlatforms.add(rectangleCentre);
+        traversablePlatforms.add(rectangleDroit);
+        
+        // Ajout de la plateforme principale non-traversable
+        platforms.add(platform);
+        
+        // Ajout de tous les rectangles à la scène
+        this.getChildren().addAll(platform, rectangleGauche, rectangleCentre, rectangleDroit);
+        
+        // Ajoute le sprite du joueur à la scène
+        this.getChildren().add(player.sprite);
+        
+        // Position initiale du sprite
+        player.sprite.setX(player.x);
+        player.sprite.setY(player.y);
+    }
+
+    private void setupHealthBar() {
+        // Création du conteneur pour la barre de vie
+        VBox healthContainer = new VBox(5);
+        healthContainer.setTranslateX(20);
+        healthContainer.setTranslateY(20);
+
+        // Texte pour les PV
+        Text healthText = new Text("SANTÉ");
+        healthText.setFont(Font.font("Arial Black", FontWeight.BOLD, 16));
+        healthText.setFill(Color.WHITE);
+        healthText.setStroke(Color.BLACK);
+        healthText.setStrokeWidth(1);
+
+        // Barre de vie principale
+        healthBarForeground = new Rectangle(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+        healthBarForeground.setArcWidth(20);
+        healthBarForeground.setArcHeight(20);
+        healthBarForeground.setStroke(Color.WHITE);
+        healthBarForeground.setStrokeWidth(2);
+        
+        // Effet de brillance pour la barre
+        DropShadow glow = new DropShadow();
+        glow.setColor(Color.WHITE);
+        glow.setRadius(15);
+        healthBarForeground.setEffect(glow);
+        
+        // Ajout des éléments au conteneur
+        healthContainer.getChildren().addAll(healthText, healthBarForeground);
+        this.getChildren().add(healthContainer);
+    }
+
+    private void setupWaveUI() {
+        waveText = new Text("Vague: 1/" + MAX_WAVES);
+        waveText.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        waveText.setFill(Color.RED);
+        waveText.setStroke(Color.BLACK);
+        waveText.setStrokeWidth(1);
+        waveText.setX(GAME_WIDTH - 180);
+        waveText.setY(30);
+
+        waveBigAnnouncement = new Text("");
+        waveBigAnnouncement.setFont(Font.font("Arial Black", 72));
+        waveBigAnnouncement.setFill(Color.WHITE);
+        waveBigAnnouncement.setStroke(Color.BLACK);
+        waveBigAnnouncement.setStrokeWidth(3);
+        waveBigAnnouncement.setVisible(false);
+        waveBigAnnouncement.setX(GAME_WIDTH / 2 - 200);
+        waveBigAnnouncement.setY(GAME_HEIGHT / 2);
+
+        this.getChildren().addAll(waveText, waveBigAnnouncement);
+    }
+
+    private void setupInventory() {
+        inventorySlot1 = new Rectangle(GAME_WIDTH / 2 - 55, GAME_HEIGHT - 70, 50, 50);
+        inventorySlot2 = new Rectangle(GAME_WIDTH / 2 + 5, GAME_HEIGHT - 70, 50, 50);
+        
+        inventorySlot1.setFill(Color.TRANSPARENT);
+        inventorySlot2.setFill(Color.TRANSPARENT);
+        inventorySlot1.setStroke(Color.WHITE);
+        inventorySlot2.setStroke(Color.WHITE);
+        
+        try {
+            Image potionImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/projet/projet/images/potion.png")));
+            
+            potionIndicator1 = new ImageView(potionImage);
+            potionIndicator2 = new ImageView(potionImage);
+            
+            potionIndicator1.setFitWidth(40);
+            potionIndicator1.setFitHeight(40);
+            potionIndicator2.setFitWidth(40);
+            potionIndicator2.setFitHeight(40);
+            
+            potionIndicator1.setX(inventorySlot1.getX() + 5);
+            potionIndicator1.setY(inventorySlot1.getY() + 5);
+            potionIndicator2.setX(inventorySlot2.getX() + 5);
+            potionIndicator2.setY(inventorySlot2.getY() + 5);
+            
+            potionIndicator1.setVisible(false);
+            potionIndicator2.setVisible(false);
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de l'image de potion: " + e.getMessage());
+        }
+        
+        this.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
+    }
 } 
+

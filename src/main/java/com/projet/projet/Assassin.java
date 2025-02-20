@@ -46,8 +46,12 @@ public class Assassin extends Player {
     // ABBILITE DE L'ASSASIN
     @Override
     public void useSpecialAbility() {
-        // TO DO: Implémenter la capacité de furtivité
-        System.out.println("L'assassin devient furtif !");
+        if (canUseSpecialAbility()) {
+            isSpecialActive = true;
+            lastSpecialAbilityTime = System.currentTimeMillis();
+            specialAbilityEndTime = System.currentTimeMillis() + 5000; // 5 secondes de furtivité
+            System.out.println("L'assassin devient furtif !");
+        }
     }
 
 } 
