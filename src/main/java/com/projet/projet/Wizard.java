@@ -8,7 +8,7 @@ public class Wizard extends Player {
     private static final long SPECIAL_ABILITY_COOLDOWN = 15000; // 15 secondes
     
     public Wizard() {
-        super(100, 20, 3.0); // vie = 100, dégâts = 20, vitesse = 3
+        super(100, 20, 3.0); // vie = 100, degats = 20, vitesse = 3
         this.attackCooldown = 1000; // Attaque normale (1 seconde)
         try {
             // Chargement des deux sprites
@@ -18,7 +18,7 @@ public class Wizard extends Player {
             this.leftSprite = new Image(getClass().getResourceAsStream(leftImagePath));
             this.rightSprite = new Image(getClass().getResourceAsStream(rightImagePath));
             
-            // Par défaut, on commence tourné vers la droite
+            // Par def tourné vers la droite
             sprite.setImage(rightSprite);
         } catch (Exception e) {
             System.err.println("Impossible de charger les images du wizard: " + e.getMessage());
