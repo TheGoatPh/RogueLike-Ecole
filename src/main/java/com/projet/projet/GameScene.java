@@ -55,8 +55,8 @@ public class GameScene extends Pane {
     private static final long DAMAGE_COOLDOWN = 1000; // 1 second
     private Rectangle inventorySlot1;
     private Rectangle inventorySlot2;
-    private Circle potionIndicator1;
-    private Circle potionIndicator2;
+    private ImageView potionIndicator1;
+    private ImageView potionIndicator2;
     private List<Potion> potions;
     private Timeline potionSpawnTimeline;
     private boolean hasPotion1 = false;
@@ -203,10 +203,30 @@ public class GameScene extends Pane {
         this.getChildren().add(timerText);
         
         // Indicateurs de potions (initialement invisibles)
-        potionIndicator1 = new Circle(inventorySlot1.getX() + 25, inventorySlot1.getY() + 25, 10, Color.RED);
-        potionIndicator2 = new Circle(inventorySlot2.getX() + 25, inventorySlot2.getY() + 25, 10, Color.RED);
-        potionIndicator1.setVisible(false);
-        potionIndicator2.setVisible(false);
+        try {
+            Image potionImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/projet/projet/images/potion.png")));
+            
+            // Création des indicateurs de potions avec l'image
+            potionIndicator1 = new ImageView(potionImage);
+            potionIndicator2 = new ImageView(potionImage);
+            
+            // Ajuster la taille des images
+            potionIndicator1.setFitWidth(40);
+            potionIndicator1.setFitHeight(40);
+            potionIndicator2.setFitWidth(40);
+            potionIndicator2.setFitHeight(40);
+            
+            // Positionner les images au centre des slots
+            potionIndicator1.setX(inventorySlot1.getX() + 5);
+            potionIndicator1.setY(inventorySlot1.getY() + 5);
+            potionIndicator2.setX(inventorySlot2.getX() + 5);
+            potionIndicator2.setY(inventorySlot2.getY() + 5);
+            
+            potionIndicator1.setVisible(false);
+            potionIndicator2.setVisible(false);
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de l'image de potion: " + e.getMessage());
+        }
         
         this.getChildren().addAll(inventorySlot1, inventorySlot2, potionIndicator1, potionIndicator2);
         
@@ -574,7 +594,7 @@ public class GameScene extends Pane {
         for (Dragon dragon : new ArrayList<>(dragons)) {
             if (isInRange(player, dragon, 140)) {
                 dragon.takeDamage(player.attackDamage);
-                System.out.println("Démon touché ! Vie restante : " + dragon.getCurrentHealth());
+                System.out.println("Dragon touché ! Vie restante : " + dragon.getCurrentHealth());
                 
                 if (dragon.isDead()) {
                     this.getChildren().removeAll(dragon.getSprite(), dragon.getHealthBar());
@@ -582,7 +602,7 @@ public class GameScene extends Pane {
                     demonKillCount++;
                     
                     // Spawn une potion tous les 5 monstres tués si l'inventaire n'est pas plein
-                    if (demonKillCount % 5 == 0 && !hasPotion1 && !hasPotion2) {
+                    if (demonKillCount % 5 == 0) {
                         spawnPotion();
                     }
 
