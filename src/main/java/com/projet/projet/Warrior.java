@@ -4,12 +4,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class Warrior extends Player {
-    private boolean isDefending;
     
     public Warrior() {
         super(150, 25, 2.5); // Plus de vie, dégâts élevés, moins rapide
         this.attackCooldown = 1500; // Attaque lente (1.5 secondes)
-        this.isDefending = false;
         try {
             // Chargement des deux sprites
             String leftImagePath = "/com/projet/projet/images/warrior_left.png";
@@ -42,6 +40,4 @@ public class Warrior extends Player {
             System.out.println("Le guerrier active son bouclier !");
         }
     }
-
-
 } 

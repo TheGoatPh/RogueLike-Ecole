@@ -4,14 +4,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class Wizard extends Player {
-    private int mana;
     private boolean isLightningActive = false;
     private static final long SPECIAL_ABILITY_COOLDOWN = 15000; // 15 secondes
     
     public Wizard() {
         super(100, 20, 3.0); // vie = 100, dégâts = 20, vitesse = 3
         this.attackCooldown = 1000; // Attaque normale (1 seconde)
-        this.mana = 100;
         try {
             // Chargement des deux sprites
             String leftImagePath = "/com/projet/projet/images/wizard_left.png";
@@ -29,11 +27,7 @@ public class Wizard extends Player {
     
     @Override
     public void attack() {
-        if (mana >= 10) {
-            // Lance un sort
-            mana -= 10;
-            System.out.println("Le magicien lance un sort !");
-        }
+        System.out.println("Le magicien lance un sort !");
     }
     
     @Override

@@ -1,9 +1,9 @@
 {
   "playerClass": "WIZARD",
   "currentWave": 1,
-  "currentHealth": 90,
+  "currentHealth": 100,
   "demonKillCount": 0,
-  "playTime": 37,
+  "playTime": 1,
   "hasPotion1": false,
   "hasPotion2": false
 }

@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.shape.Circle;
+import javafx.scene.Node;
 
 public class GameScene extends Pane {
     private static final int GAME_WIDTH = MainApplication.WINDOW_WIDTH;
@@ -168,11 +169,8 @@ public class GameScene extends Pane {
     }
     
     private void setupControls() {
-        System.out.println("Configuration des contrôles..."); // Debug
-        
         // Ajoute les gestionnaires d'événements à la Scene
         scene.setOnKeyPressed(e -> {
-            System.out.println("Touche pressée: " + e.getCode());
             activeKeys.add(e.getCode());
             
             switch (e.getCode()) {
@@ -197,10 +195,7 @@ public class GameScene extends Pane {
             }
         });
         
-        scene.setOnKeyReleased(e -> {
-            System.out.println("Touche relâchée: " + e.getCode()); // Debug
-            activeKeys.remove(e.getCode());
-        });
+        scene.setOnKeyReleased(e -> activeKeys.remove(e.getCode()));
     }
     
     private boolean isInRange(Player player, Dragon dragon, double range) {
@@ -210,7 +205,6 @@ public class GameScene extends Pane {
     }
     
     private void startGameLoop() {
-        System.out.println("Démarrage de la boucle de jeu"); // Debug
         AnimationTimer gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -238,11 +232,9 @@ public class GameScene extends Pane {
     private void handleMovement() {
         if (activeKeys.contains(KeyCode.LEFT)) {
             player.moveLeft();
-            System.out.println("Déplacement gauche - X: " + player.x); // Debug
         }
         if (activeKeys.contains(KeyCode.RIGHT)) {
             player.moveRight();
-            System.out.println("Déplacement droite - X: " + player.x); // Debug
         }
     }
     
@@ -596,7 +588,10 @@ public class GameScene extends Pane {
                 }
             }
         }
-        player.performAttack();
+        if (player.canAttack()) {
+            player.attack();
+            player.resetAttackCooldown();
+        }
     }
     
     private void startNextWave() {

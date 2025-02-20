@@ -6,8 +6,11 @@ participant MainApplication
 participant MainMenu
 participant GameManager
 participant GameScene
+participant Entity
+participant Dragon
 participant SaveManager
 participant PlayerCreation
+participant SaveData
 
 Player -> MainApplication: lance le jeu
 activate MainApplication
@@ -15,28 +18,90 @@ activate MainApplication
 MainApplication -> MainMenu: crée
 activate MainMenu
 
-Player -> MainMenu: sélectionne "Nouvelle Partie"
-MainMenu -> GameManager: crée
-activate GameManager
-
-GameManager -> PlayerCreation: createPlayer()
-activate PlayerCreation
-PlayerCreation --> GameManager: nouveau Player
-deactivate PlayerCreation
+alt Nouvelle Partie
+    Player -> MainMenu: clique "Nouvelle Partie"
+    MainMenu -> SaveManager: deleteSave()
+    MainMenu -> GameManager: crée
+    activate GameManager
+    
+    GameManager -> PlayerCreation: createPlayer()
+    activate PlayerCreation
+    PlayerCreation --> GameManager: nouveau Player
+    deactivate PlayerCreation
+else Continuer Partie
+    Player -> MainMenu: clique "Continuer"
+    MainMenu -> SaveManager: loadGame()
+    activate SaveManager
+    SaveManager --> MainMenu: SaveData
+    deactivate SaveManager
+    MainMenu -> PlayerCreation: createPlayer(saveData.playerClass)
+    PlayerCreation --> MainMenu: Player
+    MainMenu -> GameScene: crée(player, saveData)
+end
 
 GameManager -> GameScene: crée
 activate GameScene
 
+GameScene -> GameScene: setupUI()
 GameScene -> GameScene: setupControls()
 GameScene -> GameScene: startGameLoop()
 
-loop Game Loop
+loop Game Loop tant que !isGameOver et !isPaused
     GameScene -> GameScene: handleMovement()
+    GameScene -> Entity: moveLeft()/moveRight()
     GameScene -> GameScene: applyGravity()
+    GameScene -> GameScene: checkCollision()
+    GameScene -> GameScene: updateDemons()
+    GameScene -> GameScene: updateHealthBar()
+    GameScene -> GameScene: checkGameOver()
+    GameScene -> GameScene: updateCooldownBar()
+    GameScene -> GameScene: checkSpecialAbilityEffects()
 end
 
 Player -> GameScene: appuie sur touches
-GameScene -> Player: moveLeft()/moveRight()/jump()
+alt Attaque (A)
+    GameScene -> GameScene: handleAttack()
+    GameScene -> Entity: canAttack()
+    GameScene -> Entity: attack()
+    GameScene -> Entity: resetAttackCooldown()
+end
+
+alt Capacité Spéciale (Z)
+    GameScene -> Entity: useSpecialAbility()
+    GameScene -> Entity: canUseSpecialAbility()
+end
+
+alt Game Over
+    GameScene -> GameScene: checkGameOver()
+    activate GameScene
+    GameScene -> GameScene: stopWaveSpawning()
+    GameScene -> GameScene: clearDemons()
+    GameScene -> GameScene: showGameOverScreen()
+    deactivate GameScene
+end
+
+alt Pause
+    Player -> GameScene: appuie sur ESCAPE
+    GameScene -> GameScene: togglePauseMenu()
+    GameScene -> SaveManager: saveGame()
+    activate SaveManager
+    SaveManager -> SaveData: crée
+    SaveManager -> SaveManager: écrit game_save.json
+    deactivate SaveManager
+end
+
+alt Spawn de Démons
+    GameScene -> GameScene: startNextWave()
+    activate GameScene
+    loop tant que remainingDemonsToSpawn > 0 et !isGameOver
+        GameScene -> GameScene: spawnDemon()
+        GameScene -> Dragon: crée
+        activate Dragon
+        Dragon --> GameScene: nouveau Dragon
+        deactivate Dragon
+    end
+    deactivate GameScene
+end
 
 alt Fermeture du jeu
     Player -> MainApplication: ferme la fenêtre

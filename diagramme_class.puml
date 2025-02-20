@@ -1,23 +1,17 @@
 @startuml
 title RogueLike - Diagramme de Classes
 
-abstract class Player {
+abstract class Entity {
   + x: double
   + y: double
   + sprite: ImageView
   # leftSprite: Image
   # rightSprite: Image
-  - speed: double
+  # speed: double
   # maxHealth: int
   # currentHealth: int
-  # lastAttackTime: long
   # attackDamage: int
-  # attackCooldown: long
-  + Player(health: int, damage: int, speed: double)
-  + canAttack(): boolean
-  + performAttack(): void
-  + {abstract} attack(): void
-  + {abstract} useSpecialAbility(): void
+  + Entity(maxHealth: int, attackDamage: int, speed: double)
   + moveLeft(): void
   + moveRight(): void
   + takeDamage(damage: int): void
@@ -26,26 +20,104 @@ abstract class Player {
   + getMaxHealth(): int
 }
 
+abstract class Player extends Entity {
+  # DEFAULT_SPECIAL_ABILITY_COOLDOWN: long
+  # lastSpecialAbilityTime: long
+  # specialAbilityEndTime: long
+  # isSpecialActive: boolean
+  # attackCooldown: long
+  # lastAttackTime: long
+  + Player(maxHealth: int, attackDamage: int, speed: double)
+  + {abstract} attack(): void
+  + {abstract} useSpecialAbility(): void
+  + canAttack(): boolean
+  + resetAttackCooldown(): void
+  + isSpecialActive(): boolean
+  + getSpecialCooldownPercentage(): double
+  # canUseSpecialAbility(): boolean
+}
+
+class Warrior extends Player {
+  - isDefending: boolean
+  + Warrior()
+  + attack(): void
+  + useSpecialAbility(): void
+}
+
+class Wizard extends Player {
+  - mana: int
+  - isLightningActive: boolean
+  + Wizard()
+  + attack(): void
+  + useSpecialAbility(): void
+  + isLightningActive(): boolean
+}
+
+class Assassin extends Player {
+  + Assassin()
+  + attack(): void
+  + useSpecialAbility(): void
+}
+
+class Doctor extends Player {
+  - healingPower: int
+  + Doctor()
+  + attack(): void
+  + useSpecialAbility(): void
+}
+
+class Dragon extends Entity {
+  - speed: double
+  - velocityY: double
+  - isAttacking: boolean
+  - lastAttackTime: long
+  - healthBar: Rectangle
+  + Dragon(x: double, y: double)
+  + moveTowardsPlayer(player: Player): void
+  + takeDamage(damage: int): void
+  + isDead(): boolean
+  + checkCollision(platform: Rectangle): void
+  + getSprite(): ImageView
+  + getHealthBar(): Rectangle
+  + getCurrentHealth(): int
+}
+
 class GameScene {
-  - activeKeys: Set<KeyCode>
+  - {static} GAME_WIDTH: int
+  - {static} GAME_HEIGHT: int
   - player: Player
-  - root: Group
-  - {static} GRAVITY: double
-  - {static} GROUND_LEVEL: double
-  - verticalVelocity: double
-  + GameScene(root: Group, width: double, height: double)
-  - handleMovement(): void
-  - applyGravity(): void
+  - activeKeys: Set<KeyCode>
+  - dragons: List<Dragon>
+  - platforms: List<Rectangle>
+  - isGameOver: boolean
+  - isPaused: boolean
+  - currentWave: int
+  + GameScene(player: Player, saveData: SaveData)
+  - setupUI(): void
   - setupControls(): void
   - startGameLoop(): void
+  - update(): void
+  - handleAttack(): void
+  - checkGameOver(): void
+  - spawnDemon(): void
+  - startNextWave(): void
+  - saveGame(): void
+}
+
+class MainMenu {
+  - menu: VBox
+  + getMainMenu(): VBox
+  - startNewGame(): void
+  - loadGame(): void
 }
 
 class GameManager {
-  - stage: Stage
-  - root: Group
+  - currentPlayer: Player
   - gameScene: GameScene
-  + GameManager(stage: Stage)
-  + startGame(): void
+  - menu: VBox
+  + getClassSelectionMenu(): VBox
+  - createCharacterButton(): VBox
+  - startGame(): void
 }
 
 class SaveManager {
@@ -73,7 +145,6 @@ class SaveData {
 class MainApplication {
   - {static} WINDOW_WIDTH: int
   - {static} WINDOW_HEIGHT: int
-  - gameManager: GameManager
   + start(stage: Stage): void
   + {static} main(args: String[]): void
 }
@@ -82,31 +153,31 @@ class PlayerCreation {
   + {static} createPlayer(playerClass: String): Player
 }
 
-class Dragon extends Skeleton {
+class Potion {
+  - sprite: Node
   - x: double
   - y: double
-  - sprite: ImageView
-  - speed: double
-  - velocityY: double
-  - gravity: double
-  - idleImage: Image
-  - attackImage: Image
-  - isAttacking: boolean
-  + Dragon(x: double, y: double)
-  + moveTowardsPlayer(player: Player): void
-  - attack(player: Player): void
-  + checkCollision(platform: Rectangle): void
+  - HEAL_AMOUNT: int
+  + Potion(x: double, y: double)
+  + getSprite(): Node
+  + getX(): double
+  + getY(): double
+  + getHealAmount(): int
 }
 
-MainApplication --> GameManager
+MainApplication --> MainMenu
+MainMenu --> GameManager
 GameManager --> GameScene
 GameScene --> Player
+GameScene --> Dragon
+GameScene --> Potion
 GameScene ..> SaveManager
 SaveManager --> SaveData
 PlayerCreation ..> Player
 
+note right of Entity : "Classe abstraite de base\npour toutes les entités du jeu"
 note right of Player : "Classe abstraite pour tous\nles types de joueurs"
-note right of PlayerCreation : "Factory pour créer\nles différents types\nde joueurs"
-note bottom of SaveManager : "Gestion des sauvegardes\nen format JSON"
+note right of Dragon : "Ennemis du jeu avec\nIA basique"
+note right of SaveManager : "Gestion des sauvegardes\nen format JSON"
 
 @enduml

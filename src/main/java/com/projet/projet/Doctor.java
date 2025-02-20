@@ -6,12 +6,10 @@ import javafx.scene.image.ImageView;
 import java.util.Objects;
 
 public class Doctor extends Player {
-    private int healingPower;
     
     public Doctor() {
         super(120, 20, 3.0); // vie = 120, dégâts = 20, vitesse = 3
         this.attackCooldown = 1000; // Attaque normale (1 seconde)
-        this.healingPower = 100;
         try {
             // Chargement des deux sprites
             String leftImagePath = "/com/projet/projet/images/doctor_left.png";
@@ -29,11 +27,7 @@ public class Doctor extends Player {
     
     @Override
     public void attack() {
-        if (healingPower >= 10) {
-            // Attaque de soin
-            healingPower -= 10;
-            System.out.println("Le docteur lance une attaque de soin !");
-        }
+        System.out.println("Le docteur lance une attaque de soin !");
     }
 
     @Override
