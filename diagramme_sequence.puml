@@ -1,0 +1,50 @@
+@startuml
+title RogueLike Game Sequence
+
+actor Player
+participant MainApplication
+participant MainMenu
+participant GameManager
+participant GameScene
+participant SaveManager
+participant PlayerCreation
+
+Player -> MainApplication: lance le jeu
+activate MainApplication
+
+MainApplication -> MainMenu: crée
+activate MainMenu
+
+Player -> MainMenu: sélectionne "Nouvelle Partie"
+MainMenu -> GameManager: crée
+activate GameManager
+
+GameManager -> PlayerCreation: createPlayer()
+activate PlayerCreation
+PlayerCreation --> GameManager: nouveau Player
+deactivate PlayerCreation
+
+GameManager -> GameScene: crée
+activate GameScene
+
+GameScene -> GameScene: setupControls()
+GameScene -> GameScene: startGameLoop()
+
+loop Game Loop
+    GameScene -> GameScene: handleMovement()
+    GameScene -> GameScene: applyGravity()
+end
+
+Player -> GameScene: appuie sur touches
+GameScene -> Player: moveLeft()/moveRight()/jump()
+
+alt Fermeture du jeu
+    Player -> MainApplication: ferme la fenêtre
+    MainApplication -> GameScene: saveGame()
+    GameScene -> SaveManager: saveGame(saveData)
+    activate SaveManager
+    SaveManager -> SaveManager: écrit game_save.json
+    deactivate SaveManager
+end
+
+@enduml

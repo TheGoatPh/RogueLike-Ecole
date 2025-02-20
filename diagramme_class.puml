@@ -1,0 +1,112 @@
+@startuml
+title RogueLike - Diagramme de Classes
+
+abstract class Player {
+  + x: double
+  + y: double
+  + sprite: ImageView
+  # leftSprite: Image
+  # rightSprite: Image
+  - speed: double
+  # maxHealth: int
+  # currentHealth: int
+  # lastAttackTime: long
+  # attackDamage: int
+  # attackCooldown: long
+  + Player(health: int, damage: int, speed: double)
+  + canAttack(): boolean
+  + performAttack(): void
+  + {abstract} attack(): void
+  + {abstract} useSpecialAbility(): void
+  + moveLeft(): void
+  + moveRight(): void
+  + takeDamage(damage: int): void
+  + heal(amount: int): void
+  + getCurrentHealth(): int
+  + getMaxHealth(): int
+}
+
+class GameScene {
+  - activeKeys: Set<KeyCode>
+  - player: Player
+  - root: Group
+  - {static} GRAVITY: double
+  - {static} GROUND_LEVEL: double
+  - verticalVelocity: double
+  + GameScene(root: Group, width: double, height: double)
+  - handleMovement(): void
+  - applyGravity(): void
+  - setupControls(): void
+  - startGameLoop(): void
+}
+
+class GameManager {
+  - stage: Stage
+  - root: Group
+  - gameScene: GameScene
+  + GameManager(stage: Stage)
+  + startGame(): void
+}
+
+class SaveManager {
+  - {static} SAVE_FILE: String
+  - {static} gson: Gson
+  + {static} saveGame(saveData: SaveData): void
+  + {static} loadGame(): SaveData
+  + {static} hasSaveFile(): boolean
+  + {static} deleteSave(): void
+}
+
+class SaveData {
+  - playerClass: String
+  - currentWave: int
+  - currentHealth: int
+  - demonKillCount: int
+  - playTime: long
+  - hasPotion1: boolean
+  - hasPotion2: boolean
+  + SaveData()
+  + SaveData(playerClass: String, currentWave: int, ...)
+  + getters/setters
+}
+
+class MainApplication {
+  - {static} WINDOW_WIDTH: int
+  - {static} WINDOW_HEIGHT: int
+  - gameManager: GameManager
+  + start(stage: Stage): void
+  + {static} main(args: String[]): void
+}
+
+class PlayerCreation {
+  + {static} createPlayer(playerClass: String): Player
+}
+
+class Dragon extends Skeleton {
+  - x: double
+  - y: double
+  - sprite: ImageView
+  - speed: double
+  - velocityY: double
+  - gravity: double
+  - idleImage: Image
+  - attackImage: Image
+  - isAttacking: boolean
+  + Dragon(x: double, y: double)
+  + moveTowardsPlayer(player: Player): void
+  - attack(player: Player): void
+  + checkCollision(platform: Rectangle): void
+}
+
+MainApplication --> GameManager
+GameManager --> GameScene
+GameScene --> Player
+GameScene ..> SaveManager
+SaveManager --> SaveData
+PlayerCreation ..> Player
+
+note right of Player : "Classe abstraite pour tous\nles types de joueurs"
+note right of PlayerCreation : "Factory pour créer\nles différents types\nde joueurs"
+note bottom of SaveManager : "Gestion des sauvegardes\nen format JSON"
+
+@enduml
