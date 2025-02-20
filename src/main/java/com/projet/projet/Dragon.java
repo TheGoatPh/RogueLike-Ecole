@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 
 import java.util.Objects;
 
-public class Dragon extends Skeleton {
+public class Dragon {
     private double x;
     private double y;
     private ImageView sprite;
@@ -30,7 +30,7 @@ public class Dragon extends Skeleton {
     private static final long DAMAGE_COOLDOWN = 1000; // 1 seconde en millisecondes
     
     public Dragon(double x, double y) {
-        super(x, y);
+        //super(x, y);
         this.x = x;
         this.y = y;
         
