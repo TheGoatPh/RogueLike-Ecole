@@ -2,12 +2,10 @@ package com.projet.projet;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.geometry.Rectangle2D;
 import javafx.stage.WindowEvent;
 
-public class HelloApplication extends Application {
+public class MainApplication extends Application {
     // Taille unique pour tous les écrans
     public static final int WINDOW_WIDTH = 1024;
     public static final int WINDOW_HEIGHT = 576;

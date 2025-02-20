@@ -4,7 +4,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
 import javafx.scene.text.Text;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.paint.Color;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
@@ -12,8 +11,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class MainMenu {
-    private static final int GAME_WIDTH = HelloApplication.WINDOW_WIDTH;
-    private static final int GAME_HEIGHT = HelloApplication.WINDOW_HEIGHT;
+    private static final int GAME_WIDTH = MainApplication.WINDOW_WIDTH;
+    private static final int GAME_HEIGHT = MainApplication.WINDOW_HEIGHT;
     private VBox menu;
 
     public VBox getMainMenu() {

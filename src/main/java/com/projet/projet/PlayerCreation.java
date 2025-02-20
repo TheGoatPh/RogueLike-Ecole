@@ -1,6 +1,6 @@
 package com.projet.projet;
 
-public class PlayerFactory {
+public class PlayerCreation {
     public static Player createPlayer(String playerClass) {
         return switch (playerClass) {
             case "ASSASSIN" -> new Assassin();

@@ -3,17 +3,11 @@ package com.projet.projet;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
 import javafx.geometry.Pos;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.Font;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.Stop;
 
 public class GameManager {
     private Player currentPlayer;
@@ -35,7 +29,7 @@ public class GameManager {
         mainTitle.setEffect(titleShadow);
 
         // Sous-titre
-        Text subTitle = new Text("Choose Your Hero");
+        Text subTitle = new Text("Choisi Ton Hero");
         subTitle.setFont(Font.font("Arial", 24));
         subTitle.setFill(Color.LIGHTGRAY);
         subTitle.setEffect(new DropShadow(5, Color.BLACK));
@@ -76,7 +70,7 @@ public class GameManager {
     }
 
     private void startGame(String playerClass) {
-        currentPlayer = PlayerFactory.createPlayer(playerClass);
+        currentPlayer = PlayerCreation.createPlayer(playerClass);
         gameScene = new GameScene(currentPlayer);
         Stage stage = (Stage) menu.getScene().getWindow();
         stage.setScene(gameScene.getScene());

@@ -5,13 +5,12 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
+
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import java.util.List;
-import java.util.ArrayList;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
 import javafx.util.Duration;
@@ -23,12 +22,11 @@ import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
-import java.util.Random;
 import javafx.scene.shape.Circle;
 
 public class GameScene extends Pane {
-    private static final int GAME_WIDTH = HelloApplication.WINDOW_WIDTH;
-    private static final int GAME_HEIGHT = HelloApplication.WINDOW_HEIGHT;
+    private static final int GAME_WIDTH = MainApplication.WINDOW_WIDTH;
+    private static final int GAME_HEIGHT = MainApplication.WINDOW_HEIGHT;
     private Player player;
     private Set<KeyCode> activeKeys;
     private Scene scene;
@@ -39,7 +37,7 @@ public class GameScene extends Pane {
     private double verticalVelocity = 0;
     private static final double GRAVITY = 0.3;
     private static final double JUMP_FORCE = -15.0;
-    private List<Demon> demons;
+    private List<Dragon> dragons;
     private Rectangle healthBarBackground;
     private Rectangle healthBarForeground;
     private static final int HEALTH_BAR_WIDTH = 200;
@@ -83,7 +81,7 @@ public class GameScene extends Pane {
         this.activeKeys = new HashSet<>();
         this.platforms = new ArrayList<>();
         this.traversablePlatforms = new ArrayList<>();
-        this.demons = new ArrayList<>();
+        this.dragons = new ArrayList<>();
         this.potions = new ArrayList<>();
         
         if (saveData != null) {
@@ -100,9 +98,9 @@ public class GameScene extends Pane {
         
         System.out.println("GameScene créée"); // Debug
         
-        // Charge l'image de fond
+        // Charge img de fond
         try {
-            Image backgroundImage = new Image(getClass().getResourceAsStream("/com/projet/projet/images/background.jpg"));
+            Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/projet/projet/images/background.jpg")));
             ImageView background = new ImageView(backgroundImage);
             background.setFitWidth(GAME_WIDTH);
             background.setFitHeight(GAME_HEIGHT);
@@ -112,10 +110,7 @@ public class GameScene extends Pane {
             Rectangle fallbackBackground = new Rectangle(GAME_WIDTH, GAME_HEIGHT, Color.DARKGRAY);
             this.getChildren().add(fallbackBackground);
         }
-        
-        // Ajustement des plateformes pour la nouvelle taille
-        double platformY = GAME_HEIGHT * 0.75;
-        
+
         // Plateforme principale plus haute
         platform = new Rectangle(720, 30, Color.TRANSPARENT);
         platform.setX(115);
@@ -263,9 +258,9 @@ public class GameScene extends Pane {
         });
     }
     
-    private boolean isInRange(Player player, Demon demon, double range) {
-        double dx = player.x - demon.getX();
-        double dy = player.y - demon.getY();
+    private boolean isInRange(Player player, Dragon dragon, double range) {
+        double dx = player.x - dragon.getX();
+        double dy = player.y - dragon.getY();
         return Math.sqrt(dx * dx + dy * dy) <= range;
     }
     
@@ -363,8 +358,8 @@ public class GameScene extends Pane {
         healthBarForeground.setWidth(HEALTH_BAR_WIDTH * healthPercentage);
     }
     
-    private void handleDemonCollision(Demon demon) {
-        if (demon.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
+    private void handleDemonCollision(Dragon dragon) {
+        if (dragon.getSprite().getBoundsInParent().intersects(player.sprite.getBoundsInParent())) {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastDamageTime >= DAMAGE_COOLDOWN) {
                 player.takeDamage(5);
@@ -375,21 +370,21 @@ public class GameScene extends Pane {
     
     private void updateDemons() {
         // Supprimer les démons morts de la liste
-        demons.removeIf(demon -> demon.isDead());
+        dragons.removeIf(dragon -> dragon.isDead());
 
-        for (Demon demon : demons) {
+        for (Dragon dragon : dragons) {
             // Vérifier si une plateforme bloque le chemin direct vers le joueur
             boolean canSeePlayer = true;
             
             // Vérifier toutes les plateformes entre le démon et le joueur
             for (Rectangle platform : platforms) {
-                if (isBlockingPath(demon, player, platform)) {
+                if (isBlockingPath(dragon, player, platform)) {
                     canSeePlayer = false;
                     break;
                 }
             }
             for (Rectangle platform : traversablePlatforms) {
-                if (isBlockingPath(demon, player, platform)) {
+                if (isBlockingPath(dragon, player, platform)) {
                     canSeePlayer = false;
                     break;
                 }
@@ -397,21 +392,21 @@ public class GameScene extends Pane {
             
             // Le démon ne se déplace que s'il peut "voir" le joueur
             if (canSeePlayer) {
-                demon.moveTowardsPlayer(player);
-                handleDemonCollision(demon);
+                dragon.moveTowardsPlayer(player);
+                handleDemonCollision(dragon);
             }
             
             // Toujours appliquer la gravité et les collisions
             for (Rectangle platform : platforms) {
-                demon.checkCollision(platform);
+                dragon.checkCollision(platform);
             }
             for (Rectangle platform : traversablePlatforms) {
-                demon.checkCollision(platform);
+                dragon.checkCollision(platform);
             }
         }
 
         // Vérifier si la vague est terminée (plus de démons à spawn ET plus de démons vivants)
-        if (isWaveInProgress && remainingDemonsToSpawn == 0 && demons.isEmpty()) {
+        if (isWaveInProgress && remainingDemonsToSpawn == 0 && dragons.isEmpty()) {
             isWaveInProgress = false;
             if (currentWave < MAX_WAVES) {
                 startNextWave();
@@ -419,10 +414,10 @@ public class GameScene extends Pane {
         }
     }
     
-    private boolean isBlockingPath(Demon demon, Player player, Rectangle platform) {
+    private boolean isBlockingPath(Dragon dragon, Player player, Rectangle platform) {
         // Vérifier si la plateforme est entre le démon et le joueur
-        double demonX = demon.getX() + demon.getSprite().getFitWidth() / 2;
-        double demonY = demon.getY() + demon.getSprite().getFitHeight() / 2;
+        double demonX = dragon.getX() + dragon.getSprite().getFitWidth() / 2;
+        double demonY = dragon.getY() + dragon.getSprite().getFitHeight() / 2;
         double playerX = player.x + player.sprite.getFitWidth() / 2;
         double playerY = player.y + player.sprite.getFitHeight() / 2;
         
@@ -525,9 +520,9 @@ public class GameScene extends Pane {
     private void spawnDemon() {
         double spawnX = platform.getX() + random.nextDouble() * (platform.getWidth() - 100);
         double spawnY = platform.getY() - 130;
-        Demon demon = new Demon(spawnX, spawnY);
-        demons.add(demon);
-        this.getChildren().addAll(demon.getSprite(), demon.getHealthBar());
+        Dragon dragon = new Dragon(spawnX, spawnY);
+        dragons.add(dragon);
+        this.getChildren().addAll(dragon.getSprite(), dragon.getHealthBar());
     }
     
     private void updateTimer() {
@@ -576,14 +571,14 @@ public class GameScene extends Pane {
     }
     
     private void handleAttack() {
-        for (Demon demon : new ArrayList<>(demons)) {
-            if (isInRange(player, demon, 140)) {
-                demon.takeDamage(player.attackDamage);
-                System.out.println("Démon touché ! Vie restante : " + demon.getCurrentHealth());
+        for (Dragon dragon : new ArrayList<>(dragons)) {
+            if (isInRange(player, dragon, 140)) {
+                dragon.takeDamage(player.attackDamage);
+                System.out.println("Démon touché ! Vie restante : " + dragon.getCurrentHealth());
                 
-                if (demon.isDead()) {
-                    this.getChildren().removeAll(demon.getSprite(), demon.getHealthBar());
-                    demons.remove(demon);
+                if (dragon.isDead()) {
+                    this.getChildren().removeAll(dragon.getSprite(), dragon.getHealthBar());
+                    dragons.remove(dragon);
                     demonKillCount++;
                     
                     // Spawn une potion tous les 5 monstres tués si l'inventaire n'est pas plein
@@ -592,7 +587,7 @@ public class GameScene extends Pane {
                     }
 
                     // Vérifier si c'était le dernier démon de la vague
-                    if (isWaveInProgress && remainingDemonsToSpawn == 0 && demons.isEmpty()) {
+                    if (isWaveInProgress && remainingDemonsToSpawn == 0 && dragons.isEmpty()) {
                         isWaveInProgress = false;
                         if (currentWave < MAX_WAVES) {
                             startNextWave();

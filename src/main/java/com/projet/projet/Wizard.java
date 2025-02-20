@@ -43,7 +43,5 @@ public class Wizard extends Player {
         }
     }
 
-    protected void updateSprite() {
-        // Mise à jour du sprite en fonction de la direction
-    }
+
 } 
