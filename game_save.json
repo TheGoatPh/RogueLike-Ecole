@@ -1,9 +1,9 @@
 {
   "playerClass": "ASSASSIN",
-  "currentWave": 1,
-  "currentHealth": 60,
-  "demonKillCount": 0,
-  "playTime": 11,
-  "hasPotion1": false,
-  "hasPotion2": false
+  "currentWave": 30,
+  "currentHealth": 65,
+  "demonKillCount": 396,
+  "playTime": 424,
+  "hasPotion1": true,
+  "hasPotion2": true
 }

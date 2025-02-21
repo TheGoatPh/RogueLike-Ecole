@@ -78,21 +78,21 @@ Le jeu utilise plusieurs patterns de conception :
 - Maven pour la compilation
 - GSON pour la gestion des sauvegardes
 
-# Diagrammes :
+# 📈 Diagrammes :
 
 
 ## Diagramme de cas d'utilisation :
 
-![Diagramme de cas d'utilisation](./diagrammes/Diagramme_de_cas_d_utilisation.png)
+![Diagramme de cas d'utilisation](diagrammes/diagramme_use_case.png)
 
 ## Diagramme de séquence :
 
-![Diagramme de séquence](./diagrammes/Diagramme_de_séquence.png)
+![Diagramme de séquence](diagrammes/diagramme_sequence.png)
 
 ## Diagramme de classes :
 
-![Diagramme de classe](./diagrammes/Diagramme_de_classe.png)
+![Diagramme de classe](diagrammes/diagramme_classes.png)
 
 ## Diagramme d'objet :
 
-![Diagramme d'objet](./diagrammes/Diagramme_d_objet.png)
+![Diagramme d'objet](./diagrammes/Diagramme_objet.png)
