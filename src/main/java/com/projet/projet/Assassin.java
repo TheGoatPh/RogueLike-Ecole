@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Assassin extends Player {
 
     public Assassin() {
-        super(80, 15, 5.0); // Moins de vie, dégâts réduits, plus rapide
+        super(80, 15, 3.0); // Moins de vie, dégâts réduits, plus rapide
         this.attackCooldown = 500; // Attaque rapide (0.5 secondes)
         
         try {

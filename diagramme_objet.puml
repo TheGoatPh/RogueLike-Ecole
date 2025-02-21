@@ -11,11 +11,11 @@ object "mainApp : MainApplication" as mainApp {
 object "gameScene : GameScene" as gameScene {
   isGameOver = false
   isPaused = false
-  currentWave = 3
-  demonKillCount = 15
-  remainingDemonsToSpawn = 2
+  currentWave = 1
+  demonKillCount = 0
+  remainingDemonsToSpawn = 1
   isWaveInProgress = true
-  hasPotion1 = true
+  hasPotion1 = false
   hasPotion2 = false
   isJumping = false
   verticalVelocity = 0
@@ -23,23 +23,10 @@ object "gameScene : GameScene" as gameScene {
   lastDamageTime = 0
 }
 
-object "warrior : Warrior" as warrior {
-  x = 400
-  y = 300
-  currentHealth = 120
-  maxHealth = 150
-  attackDamage = 25
-  speed = 2.5
-  isSpecialActive = false
-  specialAbilityEndTime = 0
-  lastSpecialAbilityTime = 0
-  attackCooldown = 1500
-}
-
 object "wizard : Wizard" as wizard {
   x = 400
   y = 300
-  currentHealth = 80
+  currentHealth = 100
   maxHealth = 100
   attackDamage = 20
   speed = 3.0
@@ -50,48 +37,9 @@ object "wizard : Wizard" as wizard {
   attackCooldown = 1000
 }
 
-object "assassin : Assassin" as assassin {
-  x = 400
-  y = 300
-  currentHealth = 60
-  maxHealth = 80
-  attackDamage = 15
-  speed = 5.0
-  isSpecialActive = false
-  specialAbilityEndTime = 0
-  lastSpecialAbilityTime = 0
-  attackCooldown = 500
-}
-
-object "doctor : Doctor" as doctor {
-  x = 400
-  y = 300
-  currentHealth = 100
-  maxHealth = 120
-  attackDamage = 20
-  speed = 3.0
-  isSpecialActive = false
-  specialAbilityEndTime = 0
-  lastSpecialAbilityTime = 0
-  attackCooldown = 1000
-}
-
 object "dragon1 : Dragon" as dragon1 {
   x = 200
   y = 250
-  currentHealth = 30
-  maxHealth = 50
-  attackDamage = 5
-  speed = 0.8
-  velocityY = 0.4
-  isAttacking = false
-  lastAttackTime = 0
-  lastDamageTime = 0
-}
-
-object "dragon2 : Dragon" as dragon2 {
-  x = 600
-  y = 280
   currentHealth = 50
   maxHealth = 50
   attackDamage = 5
@@ -102,89 +50,23 @@ object "dragon2 : Dragon" as dragon2 {
   lastDamageTime = 0
 }
 
-object "potion1 : Potion" as potion1 {
-  x = 300
-  y = 200
-  HEAL_AMOUNT = 30
-}
-
-object "mainPlatform : Rectangle" as mainPlatform {
-  x = 115
-  y = 374
-  width = 720
-  height = 30
-}
-
-object "platformGauche : Rectangle" as platformGauche {
-  x = 51
-  y = 214
-  width = 204
-  height = 30
-}
-
-object "platformCentre : Rectangle" as platformCentre {
-  x = 409
-  y = 174
-  width = 204
-  height = 30
-}
-
-object "platformDroite : Rectangle" as platformDroite {
-  x = 768
-  y = 214
-  width = 204
-  height = 30
-}
-
 object "saveData : SaveData" as saveData {
-  playerClass = "WARRIOR"
-  currentWave = 3
-  currentHealth = 120
-  demonKillCount = 15
-  playTime = 245
-  hasPotion1 = true
+  playerClass = "WIZARD"
+  currentWave = 1
+  currentHealth = 100
+  demonKillCount = 0
+  playTime = 4
+  hasPotion1 = false
   hasPotion2 = false
 }
 
-object "healthBarForeground : Rectangle" as healthBar {
-  width = 200
-  height = 20
-  arcWidth = 20
-  arcHeight = 20
-}
-
-object "cooldownBar : Rectangle" as cooldownBar {
-  width = 120
-  height = 8
-  arcWidth = 10
-  arcHeight = 10
-}
-
 mainApp --> gameScene
-gameScene --> warrior : "player (si classe choisie = Warrior)"
-gameScene --> wizard : "player (si classe choisie = Wizard)"
-gameScene --> assassin : "player (si classe choisie = Assassin)"
-gameScene --> doctor : "player (si classe choisie = Doctor)"
+gameScene --> wizard : "player (classe actuelle = Wizard)"
 gameScene --> dragon1 : dragons
-gameScene --> dragon2 : dragons
-gameScene --> potion1 : potions
-gameScene --> mainPlatform : platform
-gameScene --> platformGauche : traversablePlatforms
-gameScene --> platformCentre : traversablePlatforms
-gameScene --> platformDroite : traversablePlatforms
-gameScene --> healthBar : healthBarForeground
-gameScene --> cooldownBar : cooldownBar
-gameScene ..> saveData : currentSave
+gameScene --> saveData : currentSave
 
-note right of warrior : "Guerrier : Tank avec capacité\nde bouclier"
 note right of wizard : "Magicien : DPS à distance avec\nattaque éclair"
-note right of assassin : "Assassin : DPS rapproché avec\nmode furtif"
-note right of doctor : "Docteur : Support avec\ncapacité de soin"
 note right of dragon1 : "Premier démon\nactif dans la vague"
-note right of dragon2 : "Second démon\nactif dans la vague"
-note right of potion1 : "Potion de soin\nrécupérable"
 note bottom of saveData : "État de la sauvegarde\nactuelle"
-note right of healthBar : "Barre de vie avec\neffet de brillance"
-note right of cooldownBar : "Barre de cooldown pour\nles capacités spéciales"
 
 @enduml

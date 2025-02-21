@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Doctor extends Player {
     
     public Doctor() {
-        super(120, 20, 3.0); // vie = 120, dégâts = 20, vitesse = 3
+        super(120, 20, 2.0); // vie = 120, dégâts = 20, vitesse = 2
         this.attackCooldown = 1000; // Attaque normale (1 seconde)
         try {
             // Chargement des deux sprites

@@ -6,7 +6,7 @@ import javafx.scene.image.ImageView;
 public class Warrior extends Player {
     
     public Warrior() {
-        super(150, 25, 2.5); // Plus de vie, dégâts élevés, moins rapide
+        super(150, 25, 1.5); // Plus de vie, dégâts élevés, moins rapide
         this.attackCooldown = 1500; // Attaque lente (1.5 secondes)
         try {
             // Chargement des deux sprites

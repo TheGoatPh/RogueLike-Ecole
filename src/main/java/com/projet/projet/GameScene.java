@@ -34,7 +34,7 @@ public class GameScene extends Pane {
     private List<Rectangle> traversablePlatforms;
     private boolean isJumping = false;
     private double verticalVelocity = 0;
-    private static final double GRAVITY = 0.3;
+    private static final double GRAVITY = 0.4;
     private static final double JUMP_FORCE = -15.0;
     private List<Dragon> dragons;
     private Rectangle healthBarBackground;
@@ -564,7 +564,7 @@ public class GameScene extends Pane {
                         dragon.takeDamage(player.attackDamage);
                     }
                 } else {
-                    dragon.takeDamage(player.attackDamage);
+                dragon.takeDamage(player.attackDamage);
                 }
                 System.out.println("Dragon touché ! Vie restante : " + dragon.getCurrentHealth());
                 

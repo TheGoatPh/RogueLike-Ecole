@@ -1,0 +1,78 @@
+@startuml
+title RogueLike - Diagramme de Cas d'Utilisation
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Joueur" as player
+actor "Système de Sauvegarde" as saveSys
+
+rectangle "RogueLike Game" {
+  usecase "Démarrer une nouvelle partie" as UC1
+  usecase "Charger une partie" as UC2
+  usecase "Choisir une classe" as UC3
+  usecase "Contrôler le personnage" as UC4
+  usecase "Combattre les démons" as UC5
+  usecase "Utiliser capacité spéciale" as UC6
+  usecase "Ramasser des potions" as UC7
+  usecase "Utiliser des potions" as UC8
+  usecase "Mettre en pause" as UC9
+  usecase "Sauvegarder la partie" as UC10
+  usecase "Gérer les vagues de démons" as UC11
+  usecase "Quitter le jeu" as UC12
+}
+
+' Relations avec le joueur
+player --> UC1
+player --> UC2
+player --> UC3
+player --> UC4
+player --> UC5
+player --> UC6
+player --> UC7
+player --> UC8
+player --> UC9
+player --> UC12
+
+' Relations avec le système de sauvegarde
+saveSys --> UC2
+saveSys --> UC10
+
+' Relations d'inclusion et d'extension
+UC1 ..> UC3 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC11 : <<include>>
+UC9 ..> UC10 : <<include>>
+UC12 ..> UC10 : <<include>>
+UC7 ..> UC8 : <<extends>>
+
+' Notes explicatives
+note right of UC3
+  Choix entre :
+  - Warrior (Tank)
+  - Wizard (DPS)
+  - Assassin (Agile)
+  - Doctor (Support)
+end note
+
+note right of UC4
+  - Déplacement gauche/droite
+  - Saut
+  - Attaque
+end note
+
+note right of UC6
+  Capacités uniques :
+  - Warrior : Bouclier
+  - Wizard : Foudre
+  - Assassin : Furtivité
+  - Doctor : Soin
+end note
+
+note right of UC11
+  - Difficulté progressive
+  - Max 30 vagues
+  - Spawn de démons
+end note
+
+@enduml

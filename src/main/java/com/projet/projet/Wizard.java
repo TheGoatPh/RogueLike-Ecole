@@ -8,7 +8,7 @@ public class Wizard extends Player {
     private static final long SPECIAL_ABILITY_COOLDOWN = 15000; // 15 secondes
     
     public Wizard() {
-        super(100, 20, 3.0); // vie = 100, degats = 20, vitesse = 3
+        super(100, 20, 2.0); // vie = 100, degats = 20, vitesse = 2
         this.attackCooldown = 1000; // Attaque normale (1 seconde)
         try {
             // Chargement des deux sprites

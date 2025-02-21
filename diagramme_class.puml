@@ -4,9 +4,6 @@ title RogueLike - Diagramme de Classes
 abstract class Entity {
   + x: double
   + y: double
-  + sprite: ImageView
-  # leftSprite: Image
-  # rightSprite: Image
   # speed: double
   # maxHealth: int
   # currentHealth: int
@@ -30,17 +27,18 @@ abstract class Player extends Entity {
   + Player(maxHealth: int, attackDamage: int, speed: double)
   + {abstract} attack(): void
   + {abstract} useSpecialAbility(): void
+  + {abstract} getClassName(): String
+  # canUseSpecialAbility(): boolean
   + canAttack(): boolean
   + resetAttackCooldown(): void
-  + isSpecialActive(): boolean
-  + getSpecialCooldownPercentage(): double
-  # canUseSpecialAbility(): boolean
+  + {final} getSpecialCooldownPercentage(): double
 }
 
 class Warrior extends Player {
   + Warrior()
   + attack(): void
   + useSpecialAbility(): void
+  + getClassName(): String
 }
 
 class Wizard extends Player {
@@ -50,29 +48,29 @@ class Wizard extends Player {
   + attack(): void
   + useSpecialAbility(): void
   + isLightningActive(): boolean
+  + getClassName(): String
 }
 
 class Assassin extends Player {
   + Assassin()
   + attack(): void
   + useSpecialAbility(): void
+  + getClassName(): String
 }
 
 class Doctor extends Player {
   + Doctor()
   + attack(): void
   + useSpecialAbility(): void
+  + getClassName(): String
 }
 
 class Dragon {
   - x: double
   - y: double
-  - sprite: ImageView
   - speed: double = 0.8
   - velocityY: double
   - gravity: double = 0.4
-  - idleImage: Image
-  - attackImage: Image
   - isAttacking: boolean
   - lastAttackTime: long
   - {static} ATTACK_COOLDOWN: long = 2000
@@ -80,90 +78,49 @@ class Dragon {
   - {static} ATTACK_DAMAGE: int = 5
   - maxHealth: int = 50
   - currentHealth: int = 50
-  - healthBar: Rectangle
-  - {static} HEALTH_BAR_WIDTH: int = 50
-  - {static} HEALTH_BAR_HEIGHT: int = 5
   - lastDamageTime: long
   - {static} DAMAGE_COOLDOWN: long = 1000
   + Dragon(x: double, y: double)
   + moveTowardsPlayer(player: Player): void
   - attack(player: Player): void
-  + checkCollision(platform: Rectangle): void
-  + getSprite(): ImageView
-  + getX(): double
-  + getY(): double
+  + checkCollision(): void
   + takeDamage(damage: int): void
-  - updateHealthBar(): void
   + isDead(): boolean
-  + getHealthBar(): Rectangle
   + getCurrentHealth(): int
 }
 
-class GameScene extends Pane {
+class GameScene {
   - {static} GAME_WIDTH: int
   - {static} GAME_HEIGHT: int
   - player: Player
-  - activeKeys: Set<KeyCode>
-  - scene: Scene
-  - platform: Rectangle
-  - platforms: List<Rectangle>
-  - traversablePlatforms: List<Rectangle>
   - isJumping: boolean
   - verticalVelocity: double
   - {static} GRAVITY: double = 0.3
   - {static} JUMP_FORCE: double = -15.0
   - dragons: List<Dragon>
-  - healthBarForeground: Rectangle
-  - {static} HEALTH_BAR_WIDTH: int = 200
-  - {static} HEALTH_BAR_HEIGHT: int = 20
   - isGameOver: boolean
-  - gameOverScreen: VBox
   - {static} FALL_DEATH_Y: double
   - demonKillCount: int
-  - killCountText: Text
-  - timerText: Text
   - startTime: long
-  - spawnTimeline: Timeline
-  - random: Random
   - lastDamageTime: long
   - {static} DAMAGE_COOLDOWN: long = 1000
-  - inventorySlot1: Rectangle
-  - inventorySlot2: Rectangle
-  - potionIndicator1: ImageView
-  - potionIndicator2: ImageView
-  - potions: List<Potion>
   - hasPotion1: boolean
   - hasPotion2: boolean
   - currentWave: int
   - {static} MAX_WAVES: int = 30
-  - waveText: Text
-  - waveBigAnnouncement: Text
   - isWaveInProgress: boolean
-  - waveSpawnTimeline: Timeline
   - remainingDemonsToSpawn: int
-  - pauseMenu: VBox
   - isPaused: boolean
-  - cooldownBar: Rectangle
-  - specialAbilityText: Text
   + GameScene(player: Player)
   + GameScene(player: Player, saveData: SaveData)
-  - setupUI(): void
-  - setupBackground(): void
-  - setupSpecialAbility(): void
-  - setupControls(): void
-  - isInRange(player: Player, dragon: Dragon, range: double): boolean
-  - startGameLoop(): void
   - update(): void
   - handleMovement(): void
   - jump(): void
   - applyGravity(): void
   - checkCollision(): void
-  - updateHealthBar(): void
   - handleDemonCollision(dragon: Dragon): void
   - updateDemons(): void
-  - isBlockingPath(dragon: Dragon, player: Player, platform: Rectangle): boolean
   - checkGameOver(): void
-  - createGameOverScreen(): void
   - restartGame(): void
   - returnToMenu(): void
   - spawnDemon(): void
@@ -175,34 +132,15 @@ class GameScene extends Pane {
   - startNextWave(): void
   - calculateDemonsForWave(wave: int): int
   - startWaveSpawning(): void
-  - createPauseMenu(): void
   - togglePauseMenu(): void
   - saveGame(): void
   - getPlayerClassName(): String
-  + getCurrentScene(): Scene
-  - updateCooldownBar(): void
-  - checkSpecialAbilityEffects(): void
-  - setupPlatforms(): void
-  - setupHealthBar(): void
-  - setupWaveUI(): void
-  - setupInventory(): void
-}
-
-class MainMenu {
-  - {static} GAME_WIDTH: int
-  - {static} GAME_HEIGHT: int
-  - menu: VBox
-  + getMainMenu(): VBox
-  - startNewGame(): void
-  - loadGame(): void
 }
 
 class GameManager {
   - currentPlayer: Player
   - gameScene: GameScene
-  - menu: VBox
-  + getClassSelectionMenu(): VBox
-  - createCharacterButton(name: String, description: String, buttonStyle: String): VBox
+  + getClassSelectionMenu(): void
   - startGame(playerClass: String): void
 }
 
@@ -228,11 +166,11 @@ class SaveData {
   + getters/setters
 }
 
-class MainApplication extends Application {
+class MainApplication {
   + {static} WINDOW_WIDTH: int = 1024
   + {static} WINDOW_HEIGHT: int = 576
   - gameManager: GameManager
-  + start(stage: Stage): void
+  + start(): void
   + {static} main(args: String[]): void
 }
 
@@ -241,19 +179,16 @@ class PlayerCreation {
 }
 
 class Potion {
-  - sprite: Node
   - x: double
   - y: double
   - {static} HEAL_AMOUNT: int = 30
   + Potion(x: double, y: double)
-  + getSprite(): Node
   + getX(): double
   + getY(): double
   + getHealAmount(): int
 }
 
-MainApplication --> MainMenu
-MainMenu --> GameManager
+MainApplication --> GameManager
 GameManager --> GameScene
 GameScene --> Player
 GameScene --> Dragon

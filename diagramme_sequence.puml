@@ -3,7 +3,6 @@ title RogueLike Game Sequence
 
 actor Player
 participant MainApplication
-participant MainMenu
 participant GameManager
 participant GameScene
 participant Entity
@@ -16,13 +15,10 @@ participant Potion
 Player -> MainApplication: lance le jeu
 activate MainApplication
 
-MainApplication -> MainMenu: crée
-activate MainMenu
-
 alt Nouvelle Partie
-    Player -> MainMenu: clique "Nouvelle Partie"
-    MainMenu -> SaveManager: deleteSave()
-    MainMenu -> GameManager: crée
+    Player -> MainApplication: nouvelle partie
+    MainApplication -> SaveManager: deleteSave()
+    MainApplication -> GameManager: crée
     activate GameManager
     
     GameManager -> PlayerCreation: createPlayer(playerClass)
@@ -32,30 +28,20 @@ alt Nouvelle Partie
     
     GameManager -> GameScene: crée(player)
 else Continuer Partie
-    Player -> MainMenu: clique "Continuer"
-    MainMenu -> SaveManager: loadGame()
+    Player -> MainApplication: continuer
+    MainApplication -> SaveManager: loadGame()
     activate SaveManager
-    SaveManager --> MainMenu: SaveData
+    SaveManager --> MainApplication: SaveData
     deactivate SaveManager
     
-    MainMenu -> PlayerCreation: createPlayer(saveData.playerClass)
-    PlayerCreation --> MainMenu: Player
-    MainMenu -> GameScene: crée(player, saveData)
+    MainApplication -> PlayerCreation: createPlayer(saveData.playerClass)
+    PlayerCreation --> MainApplication: Player
+    MainApplication -> GameScene: crée(player, saveData)
 end
 
 activate GameScene
-GameScene -> GameScene: setupUI()
-GameScene -> GameScene: setupBackground()
-GameScene -> GameScene: setupPlatforms()
-GameScene -> GameScene: setupHealthBar()
-GameScene -> GameScene: setupWaveUI()
-GameScene -> GameScene: setupInventory()
-GameScene -> GameScene: setupSpecialAbility()
-GameScene -> GameScene: setupControls()
+GameScene -> GameScene: initialisation()
 GameScene -> GameScene: startGameLoop()
-GameScene -> GameScene: createGameOverScreen()
-GameScene -> GameScene: createPauseMenu()
-GameScene -> GameScene: startNextWave()
 
 loop Game Loop tant que !isGameOver et !isPaused
     GameScene -> GameScene: update()
@@ -64,12 +50,8 @@ loop Game Loop tant que !isGameOver et !isPaused
     GameScene -> GameScene: applyGravity()
     GameScene -> GameScene: checkCollision()
     GameScene -> GameScene: updateDemons()
-    GameScene -> GameScene: updateHealthBar()
-    GameScene -> GameScene: updateTimer()
     GameScene -> GameScene: checkPotionCollision()
     GameScene -> GameScene: checkGameOver()
-    GameScene -> GameScene: updateCooldownBar()
-    GameScene -> GameScene: checkSpecialAbilityEffects()
 end
 
 Player -> GameScene: appuie sur touches
@@ -109,12 +91,11 @@ alt Game Over
     activate GameScene
     GameScene -> GameScene: stopWaveSpawning()
     GameScene -> GameScene: clearDemons()
-    GameScene -> GameScene: showGameOverScreen()
     deactivate GameScene
 end
 
 alt Pause (ESCAPE)
-    Player -> GameScene: appuie sur ESCAPE
+    Player -> GameScene: pause
     GameScene -> GameScene: togglePauseMenu()
     GameScene -> SaveManager: saveGame()
     activate SaveManager
@@ -146,8 +127,9 @@ alt Spawn de Potions
 end
 
 alt Fermeture du jeu
-    Player -> MainApplication: ferme la fenêtre
+    Player -> MainApplication: quitte
     MainApplication -> GameScene: saveGame()
+    GameScene -> Entity: getClassName()
     GameScene -> SaveManager: saveGame(saveData)
     activate SaveManager
     SaveManager -> SaveManager: écrit game_save.json
