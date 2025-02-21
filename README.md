@@ -95,4 +95,4 @@ Le jeu utilise plusieurs patterns de conception :
 
 ## Diagramme d'objet :
 
-![Diagramme d'objet](./diagrammes/Diagramme_objet.png)
+![Diagramme d'objet](./diagrammes/diagramme_objet.png)
