@@ -17,6 +17,7 @@ public abstract class Player extends Entity {
     
     public abstract void attack();
     public abstract void useSpecialAbility();
+    public abstract String getClassName();
     
     protected boolean canUseSpecialAbility() {
         long currentTime = System.currentTimeMillis();
@@ -31,14 +32,7 @@ public abstract class Player extends Entity {
         lastAttackTime = System.currentTimeMillis();
     }
     
-    public boolean isSpecialActive() {
-        if (isSpecialActive && System.currentTimeMillis() > specialAbilityEndTime) {
-            isSpecialActive = false;
-        }
-        return isSpecialActive;
-    }
-
-    public double getSpecialCooldownPercentage() {
+    public final double getSpecialCooldownPercentage() {
         long currentTime = System.currentTimeMillis();
         long elapsedTime = currentTime - lastSpecialAbilityTime;
         return Math.min(1.0, (double) elapsedTime / DEFAULT_SPECIAL_ABILITY_COOLDOWN);

@@ -11,6 +11,7 @@ participant Dragon
 participant SaveManager
 participant PlayerCreation
 participant SaveData
+participant Potion
 
 Player -> MainApplication: lance le jeu
 activate MainApplication
@@ -24,35 +25,48 @@ alt Nouvelle Partie
     MainMenu -> GameManager: crée
     activate GameManager
     
-    GameManager -> PlayerCreation: createPlayer()
+    GameManager -> PlayerCreation: createPlayer(playerClass)
     activate PlayerCreation
     PlayerCreation --> GameManager: nouveau Player
     deactivate PlayerCreation
+    
+    GameManager -> GameScene: crée(player)
 else Continuer Partie
     Player -> MainMenu: clique "Continuer"
     MainMenu -> SaveManager: loadGame()
     activate SaveManager
     SaveManager --> MainMenu: SaveData
     deactivate SaveManager
+    
     MainMenu -> PlayerCreation: createPlayer(saveData.playerClass)
     PlayerCreation --> MainMenu: Player
     MainMenu -> GameScene: crée(player, saveData)
 end
 
-GameManager -> GameScene: crée
 activate GameScene
-
 GameScene -> GameScene: setupUI()
+GameScene -> GameScene: setupBackground()
+GameScene -> GameScene: setupPlatforms()
+GameScene -> GameScene: setupHealthBar()
+GameScene -> GameScene: setupWaveUI()
+GameScene -> GameScene: setupInventory()
+GameScene -> GameScene: setupSpecialAbility()
 GameScene -> GameScene: setupControls()
 GameScene -> GameScene: startGameLoop()
+GameScene -> GameScene: createGameOverScreen()
+GameScene -> GameScene: createPauseMenu()
+GameScene -> GameScene: startNextWave()
 
 loop Game Loop tant que !isGameOver et !isPaused
+    GameScene -> GameScene: update()
     GameScene -> GameScene: handleMovement()
     GameScene -> Entity: moveLeft()/moveRight()
     GameScene -> GameScene: applyGravity()
     GameScene -> GameScene: checkCollision()
     GameScene -> GameScene: updateDemons()
     GameScene -> GameScene: updateHealthBar()
+    GameScene -> GameScene: updateTimer()
+    GameScene -> GameScene: checkPotionCollision()
     GameScene -> GameScene: checkGameOver()
     GameScene -> GameScene: updateCooldownBar()
     GameScene -> GameScene: checkSpecialAbilityEffects()
@@ -64,11 +78,30 @@ alt Attaque (A)
     GameScene -> Entity: canAttack()
     GameScene -> Entity: attack()
     GameScene -> Entity: resetAttackCooldown()
+    GameScene -> Dragon: takeDamage()
+end
+
+alt Saut (UP)
+    GameScene -> GameScene: jump()
 end
 
 alt Capacité Spéciale (Z)
     GameScene -> Entity: useSpecialAbility()
     GameScene -> Entity: canUseSpecialAbility()
+    alt Warrior
+        Entity -> Entity: heal(shieldAmount)
+    else Wizard
+        Entity -> Dragon: takeDamage(dragon.getCurrentHealth() / 2)
+    else Assassin
+        Entity -> Entity: isSpecialActive = true
+    else Doctor
+        Entity -> Entity: heal(missingHealth / 3)
+    end
+end
+
+alt Utilisation Potion (E/R)
+    GameScene -> GameScene: usePotion(slot)
+    GameScene -> Entity: heal(30)
 end
 
 alt Game Over
@@ -80,7 +113,7 @@ alt Game Over
     deactivate GameScene
 end
 
-alt Pause
+alt Pause (ESCAPE)
     Player -> GameScene: appuie sur ESCAPE
     GameScene -> GameScene: togglePauseMenu()
     GameScene -> SaveManager: saveGame()
@@ -93,6 +126,7 @@ end
 alt Spawn de Démons
     GameScene -> GameScene: startNextWave()
     activate GameScene
+    GameScene -> GameScene: calculateDemonsForWave()
     loop tant que remainingDemonsToSpawn > 0 et !isGameOver
         GameScene -> GameScene: spawnDemon()
         GameScene -> Dragon: crée
@@ -101,6 +135,14 @@ alt Spawn de Démons
         deactivate Dragon
     end
     deactivate GameScene
+end
+
+alt Spawn de Potions
+    GameScene -> GameScene: spawnPotion()
+    GameScene -> Potion: crée
+    activate Potion
+    Potion --> GameScene: nouvelle Potion
+    deactivate Potion
 end
 
 alt Fermeture du jeu

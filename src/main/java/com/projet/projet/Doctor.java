@@ -40,4 +40,8 @@ public class Doctor extends Player {
         }
     }
 
+    @Override
+    public String getClassName() {
+        return "DOCTOR";
+    }
 } 

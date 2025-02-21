@@ -21,7 +21,7 @@ abstract class Entity {
 }
 
 abstract class Player extends Entity {
-  # DEFAULT_SPECIAL_ABILITY_COOLDOWN: long
+  # {static} DEFAULT_SPECIAL_ABILITY_COOLDOWN: long = 15000
   # lastSpecialAbilityTime: long
   # specialAbilityEndTime: long
   # isSpecialActive: boolean
@@ -38,15 +38,14 @@ abstract class Player extends Entity {
 }
 
 class Warrior extends Player {
-  - isDefending: boolean
   + Warrior()
   + attack(): void
   + useSpecialAbility(): void
 }
 
 class Wizard extends Player {
-  - mana: int
   - isLightningActive: boolean
+  - {static} SPECIAL_ABILITY_COOLDOWN: long = 15000
   + Wizard()
   + attack(): void
   + useSpecialAbility(): void
@@ -60,51 +59,138 @@ class Assassin extends Player {
 }
 
 class Doctor extends Player {
-  - healingPower: int
   + Doctor()
   + attack(): void
   + useSpecialAbility(): void
 }
 
-class Dragon extends Entity {
-  - speed: double
+class Dragon {
+  - x: double
+  - y: double
+  - sprite: ImageView
+  - speed: double = 0.8
   - velocityY: double
+  - gravity: double = 0.4
+  - idleImage: Image
+  - attackImage: Image
   - isAttacking: boolean
   - lastAttackTime: long
+  - {static} ATTACK_COOLDOWN: long = 2000
+  - {static} ATTACK_RANGE: double = 60
+  - {static} ATTACK_DAMAGE: int = 5
+  - maxHealth: int = 50
+  - currentHealth: int = 50
   - healthBar: Rectangle
+  - {static} HEALTH_BAR_WIDTH: int = 50
+  - {static} HEALTH_BAR_HEIGHT: int = 5
+  - lastDamageTime: long
+  - {static} DAMAGE_COOLDOWN: long = 1000
   + Dragon(x: double, y: double)
   + moveTowardsPlayer(player: Player): void
-  + takeDamage(damage: int): void
-  + isDead(): boolean
+  - attack(player: Player): void
   + checkCollision(platform: Rectangle): void
   + getSprite(): ImageView
+  + getX(): double
+  + getY(): double
+  + takeDamage(damage: int): void
+  - updateHealthBar(): void
+  + isDead(): boolean
   + getHealthBar(): Rectangle
   + getCurrentHealth(): int
 }
 
-class GameScene {
+class GameScene extends Pane {
   - {static} GAME_WIDTH: int
   - {static} GAME_HEIGHT: int
   - player: Player
   - activeKeys: Set<KeyCode>
-  - dragons: List<Dragon>
+  - scene: Scene
+  - platform: Rectangle
   - platforms: List<Rectangle>
+  - traversablePlatforms: List<Rectangle>
+  - isJumping: boolean
+  - verticalVelocity: double
+  - {static} GRAVITY: double = 0.3
+  - {static} JUMP_FORCE: double = -15.0
+  - dragons: List<Dragon>
+  - healthBarForeground: Rectangle
+  - {static} HEALTH_BAR_WIDTH: int = 200
+  - {static} HEALTH_BAR_HEIGHT: int = 20
   - isGameOver: boolean
-  - isPaused: boolean
+  - gameOverScreen: VBox
+  - {static} FALL_DEATH_Y: double
+  - demonKillCount: int
+  - killCountText: Text
+  - timerText: Text
+  - startTime: long
+  - spawnTimeline: Timeline
+  - random: Random
+  - lastDamageTime: long
+  - {static} DAMAGE_COOLDOWN: long = 1000
+  - inventorySlot1: Rectangle
+  - inventorySlot2: Rectangle
+  - potionIndicator1: ImageView
+  - potionIndicator2: ImageView
+  - potions: List<Potion>
+  - hasPotion1: boolean
+  - hasPotion2: boolean
   - currentWave: int
+  - {static} MAX_WAVES: int = 30
+  - waveText: Text
+  - waveBigAnnouncement: Text
+  - isWaveInProgress: boolean
+  - waveSpawnTimeline: Timeline
+  - remainingDemonsToSpawn: int
+  - pauseMenu: VBox
+  - isPaused: boolean
+  - cooldownBar: Rectangle
+  - specialAbilityText: Text
+  + GameScene(player: Player)
   + GameScene(player: Player, saveData: SaveData)
   - setupUI(): void
+  - setupBackground(): void
+  - setupSpecialAbility(): void
   - setupControls(): void
+  - isInRange(player: Player, dragon: Dragon, range: double): boolean
   - startGameLoop(): void
   - update(): void
-  - handleAttack(): void
+  - handleMovement(): void
+  - jump(): void
+  - applyGravity(): void
+  - checkCollision(): void
+  - updateHealthBar(): void
+  - handleDemonCollision(dragon: Dragon): void
+  - updateDemons(): void
+  - isBlockingPath(dragon: Dragon, player: Player, platform: Rectangle): boolean
   - checkGameOver(): void
+  - createGameOverScreen(): void
+  - restartGame(): void
+  - returnToMenu(): void
   - spawnDemon(): void
+  - updateTimer(): void
+  - spawnPotion(): void
+  - usePotion(slot: int): void
+  - checkPotionCollision(): void
+  - handleAttack(): void
   - startNextWave(): void
+  - calculateDemonsForWave(wave: int): int
+  - startWaveSpawning(): void
+  - createPauseMenu(): void
+  - togglePauseMenu(): void
   - saveGame(): void
+  - getPlayerClassName(): String
+  + getCurrentScene(): Scene
+  - updateCooldownBar(): void
+  - checkSpecialAbilityEffects(): void
+  - setupPlatforms(): void
+  - setupHealthBar(): void
+  - setupWaveUI(): void
+  - setupInventory(): void
 }
 
 class MainMenu {
+  - {static} GAME_WIDTH: int
+  - {static} GAME_HEIGHT: int
   - menu: VBox
   + getMainMenu(): VBox
   - startNewGame(): void
@@ -116,12 +202,12 @@ class GameManager {
   - gameScene: GameScene
   - menu: VBox
   + getClassSelectionMenu(): VBox
-  - createCharacterButton(): VBox
-  - startGame(): void
+  - createCharacterButton(name: String, description: String, buttonStyle: String): VBox
+  - startGame(playerClass: String): void
 }
 
 class SaveManager {
-  - {static} SAVE_FILE: String
+  - {static} SAVE_FILE: String = "game_save.json"
   - {static} gson: Gson
   + {static} saveGame(saveData: SaveData): void
   + {static} loadGame(): SaveData
@@ -138,13 +224,14 @@ class SaveData {
   - hasPotion1: boolean
   - hasPotion2: boolean
   + SaveData()
-  + SaveData(playerClass: String, currentWave: int, ...)
+  + SaveData(playerClass: String, currentWave: int, currentHealth: int, demonKillCount: int, playTime: long, hasPotion1: boolean, hasPotion2: boolean)
   + getters/setters
 }
 
-class MainApplication {
-  - {static} WINDOW_WIDTH: int
-  - {static} WINDOW_HEIGHT: int
+class MainApplication extends Application {
+  + {static} WINDOW_WIDTH: int = 1024
+  + {static} WINDOW_HEIGHT: int = 576
+  - gameManager: GameManager
   + start(stage: Stage): void
   + {static} main(args: String[]): void
 }
@@ -157,7 +244,7 @@ class Potion {
   - sprite: Node
   - x: double
   - y: double
-  - HEAL_AMOUNT: int
+  - {static} HEAL_AMOUNT: int = 30
   + Potion(x: double, y: double)
   + getSprite(): Node
   + getX(): double

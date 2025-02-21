@@ -710,11 +710,7 @@ public class GameScene extends Pane {
     }
 
     private String getPlayerClassName() {
-        if (player instanceof Warrior) return "WARRIOR";
-        if (player instanceof Wizard) return "WIZARD";
-        if (player instanceof Assassin) return "ASSASSIN";
-        if (player instanceof Doctor) return "DOCTOR";
-        return "";
+        return player.getClassName();
     }
     
     public Scene getCurrentScene() {

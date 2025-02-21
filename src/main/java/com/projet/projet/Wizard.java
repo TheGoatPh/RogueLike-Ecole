@@ -48,4 +48,9 @@ public class Wizard extends Player {
         }
         return isLightningActive;
     }
+
+    @Override
+    public String getClassName() {
+        return "WIZARD";
+    }
 } 

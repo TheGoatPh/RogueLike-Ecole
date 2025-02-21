@@ -17,6 +17,10 @@ object "gameScene : GameScene" as gameScene {
   isWaveInProgress = true
   hasPotion1 = true
   hasPotion2 = false
+  isJumping = false
+  verticalVelocity = 0
+  startTime = 1234567890
+  lastDamageTime = 0
 }
 
 object "warrior : Warrior" as warrior {
@@ -82,6 +86,7 @@ object "dragon1 : Dragon" as dragon1 {
   velocityY = 0.4
   isAttacking = false
   lastAttackTime = 0
+  lastDamageTime = 0
 }
 
 object "dragon2 : Dragon" as dragon2 {
@@ -94,6 +99,7 @@ object "dragon2 : Dragon" as dragon2 {
   velocityY = 0.4
   isAttacking = false
   lastAttackTime = 0
+  lastDamageTime = 0
 }
 
 object "potion1 : Potion" as potion1 {
@@ -140,6 +146,20 @@ object "saveData : SaveData" as saveData {
   hasPotion2 = false
 }
 
+object "healthBarForeground : Rectangle" as healthBar {
+  width = 200
+  height = 20
+  arcWidth = 20
+  arcHeight = 20
+}
+
+object "cooldownBar : Rectangle" as cooldownBar {
+  width = 120
+  height = 8
+  arcWidth = 10
+  arcHeight = 10
+}
+
 mainApp --> gameScene
 gameScene --> warrior : "player (si classe choisie = Warrior)"
 gameScene --> wizard : "player (si classe choisie = Wizard)"
@@ -152,6 +172,8 @@ gameScene --> mainPlatform : platform
 gameScene --> platformGauche : traversablePlatforms
 gameScene --> platformCentre : traversablePlatforms
 gameScene --> platformDroite : traversablePlatforms
+gameScene --> healthBar : healthBarForeground
+gameScene --> cooldownBar : cooldownBar
 gameScene ..> saveData : currentSave
 
 note right of warrior : "Guerrier : Tank avec capacité\nde bouclier"
@@ -162,5 +184,7 @@ note right of dragon1 : "Premier démon\nactif dans la vague"
 note right of dragon2 : "Second démon\nactif dans la vague"
 note right of potion1 : "Potion de soin\nrécupérable"
 note bottom of saveData : "État de la sauvegarde\nactuelle"
+note right of healthBar : "Barre de vie avec\neffet de brillance"
+note right of cooldownBar : "Barre de cooldown pour\nles capacités spéciales"
 
 @enduml

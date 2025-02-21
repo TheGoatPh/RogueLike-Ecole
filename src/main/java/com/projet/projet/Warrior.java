@@ -40,4 +40,9 @@ public class Warrior extends Player {
             System.out.println("Le guerrier active son bouclier !");
         }
     }
+
+    @Override
+    public String getClassName() {
+        return "WARRIOR";
+    }
 } 

@@ -54,4 +54,8 @@ public class Assassin extends Player {
         }
     }
 
+    @Override
+    public String getClassName() {
+        return "ASSASSIN";
+    }
 } 
